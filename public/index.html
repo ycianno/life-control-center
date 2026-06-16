@@ -187,15 +187,8 @@
     </details>
 
     <details id="diet" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Protein & Diet Control</h2><p class="hint">Track the minimum nutrition behaviors that support muscle growth.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill blue" id="pillDiet">7 protein days</span><span class="chev">⌄</span></div></summary>
-      <div class="content grid grid-3">
-        <label class="check"><input id="diet-protein-backup" type="checkbox" data-cat="protein" data-save><span>Protein backup ready for the week</span></label>
-        <label class="check"><input id="diet-weekend-plan" type="checkbox" data-cat="protein" data-save><span>Weekend protein option planned</span></label>
-        <label class="check"><input id="diet-groceries" type="checkbox" data-cat="protein" data-save><span>Protein groceries available</span></label>
-        <label class="check"><input id="diet-water" type="checkbox" data-cat="protein" data-save><span>Hydration handled most days</span></label>
-        <label class="check"><input id="diet-no-junk-mode" type="checkbox" data-cat="protein" data-save><span>No full junk mode</span></label>
-        <label class="check"><input id="diet-meal-prep" type="checkbox" data-cat="protein" data-save><span>At least one protein meal prepped</span></label>
-      </div>
+      <summary><div class="summary-left"><h2>Protein & Diet Control</h2><p class="hint">Track the minimum nutrition behaviors that support muscle growth.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill blue" id="pillDiet">7 protein days</span><button class="icon-btn edit-diet-btn" type="button" title="Edit Diet Plan"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
+      <div class="content grid grid-3" id="dietRows"></div>
     </details>
 
     <details id="study" class="section section-card glass" open>
@@ -210,21 +203,21 @@
     </details>
 
     <details id="projects" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Project Execution</h2><p class="hint">Commitment: 2 hours/week. Bonus stretch: 3 hours. Research only counts when it creates output.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill green" id="pillProject">2 hrs minimum · 3 bonus</span><span class="chev">⌄</span></div></summary>
+      <summary><div class="summary-left"><h2>Project Execution</h2><p class="hint">Commitment: 2 hours/week. Bonus stretch: 3 hours. Research only counts when it creates output.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill green" id="pillProject">2 hrs minimum · 3 bonus</span><button class="icon-btn edit-project-btn" type="button" title="Edit Project Outputs"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
       <div class="content grid grid-3">
         <div class="metric"><div class="top"><div><div class="metric-title">Project Hours</div><p class="hint" id="hintProject">Minimum target: 2 hrs</p></div><span class="metric-number"><span id="projectHoursValue">0</span>/<span id="projectTargetValue">2</span></span></div><div class="bar"><div class="bar-fill" id="projectBar"></div></div><label class="label" style="margin-top:14px">Hours completed</label><input id="projectHours" data-save type="number" min="0" step="0.25" value="0"></div>
-        <div class="metric"><div class="metric-title">Valid Output</div><label class="check"><input id="project-output" type="checkbox" data-cat="project" data-save><span>Code, workflow, documentation, or plan created</span></label><label class="check"><input id="project-documented" type="checkbox" data-cat="project" data-save><span>Progress documented</span></label><label class="check"><input id="project-next" type="checkbox" data-cat="project" data-save><span>Next action is clear</span></label></div>
+        <div class="metric"><div class="metric-title">Valid Output</div><div id="projectChecks"></div></div>
         <div class="metric"><div class="metric-title">Current Focus</div><textarea id="projectFocus" data-save placeholder="Example: portfolio site, side project, a feature you're shipping this week..."></textarea></div>
       </div>
     </details>
 
     <details id="review" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Weekly Review</h2><p class="hint">At the end of the week, copy this summary and paste it into ChatGPT for analysis.</p></div><span class="chev">⌄</span></summary>
+      <summary><div class="summary-left"><h2>Weekly Review</h2><p class="hint">At the end of the week, copy this summary and paste it into ChatGPT for analysis.</p></div><div style="display:flex;gap:8px;align-items:center;"><button class="icon-btn edit-review-btn" type="button" title="Edit Review Prompts"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
       <div class="content grid grid-2">
-        <div><label class="label">Wins this week</label><textarea id="wins" data-save></textarea></div>
-        <div><label class="label">Missed habits / friction</label><textarea id="misses" data-save></textarea></div>
-        <div><label class="label">What needs to change next week?</label><textarea id="changes" data-save></textarea></div>
-        <div><label class="label">One thing I refuse to drop</label><textarea id="refuseDrop" data-save></textarea></div>
+        <div><label class="label" id="lblWins">Wins this week</label><textarea id="wins" data-save></textarea></div>
+        <div><label class="label" id="lblMisses">Missed habits / friction</label><textarea id="misses" data-save></textarea></div>
+        <div><label class="label" id="lblChanges">What needs to change next week?</label><textarea id="changes" data-save></textarea></div>
+        <div><label class="label" id="lblRefuse">One thing I refuse to drop</label><textarea id="refuseDrop" data-save></textarea></div>
         <div><label class="label">Weekly Grade</label><select id="grade" data-save><option>Not graded yet</option><option>A - Strong execution</option><option>B - Good week</option><option>C - Barely maintained structure</option><option>D - Structure broke</option><option>F - Full reset needed</option></select></div>
       </div>
     </details>
@@ -372,6 +365,45 @@
       </div>
     </div>
 
+    <!-- Edit Diet Modal -->
+    <div class="modal-backdrop" id="editDietModal" aria-hidden="true">
+      <div class="modal glass" role="dialog" aria-modal="true">
+        <h3>Edit Diet & Protein Plan</h3>
+        <p class="hint">One item per line. Each becomes a checkbox worth protein XP.</p>
+        <textarea id="editDietTextarea" spellcheck="false"></textarea>
+        <div class="modal-actions">
+          <button id="cancelDietBtn" type="button">Cancel</button>
+          <button id="saveDietBtn" type="button" class="primary">Save Diet Plan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Project Outputs Modal -->
+    <div class="modal-backdrop" id="editProjectModal" aria-hidden="true">
+      <div class="modal glass" role="dialog" aria-modal="true">
+        <h3>Edit Project Output Checks</h3>
+        <p class="hint">One item per line. Each becomes a checkbox worth project XP.</p>
+        <textarea id="editProjectTextarea" spellcheck="false"></textarea>
+        <div class="modal-actions">
+          <button id="cancelProjectBtn" type="button">Cancel</button>
+          <button id="saveProjectBtn" type="button" class="primary">Save Outputs</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Review Prompts Modal -->
+    <div class="modal-backdrop" id="editReviewModal" aria-hidden="true">
+      <div class="modal glass" role="dialog" aria-modal="true">
+        <h3>Edit Weekly Review Prompts</h3>
+        <p class="hint">Four lines — the reflection questions (wins, friction, change, refuse-to-drop).</p>
+        <textarea id="editReviewTextarea" spellcheck="false"></textarea>
+        <div class="modal-actions">
+          <button id="cancelReviewBtn" type="button">Cancel</button>
+          <button id="saveReviewBtn" type="button" class="primary">Save Prompts</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Heatmap Insights Modal -->
     <div class="modal-backdrop" id="insightsModal" aria-hidden="true">
       <div class="modal glass" role="dialog" aria-modal="true">
@@ -403,8 +435,8 @@
     <p class="footer-note">Data is saved on your server by week using a versioned SQLite database. Use Export Backup before major changes.</p>
   </main>
 
-  <script src="game.js?v=4"></script>
+  <script src="game.js?v=5"></script>
   <script src="fx.js?v=2"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

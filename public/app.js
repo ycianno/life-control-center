@@ -282,6 +282,9 @@ async function addAchievement(title, category, notes) {
 function renderStatic() {
   renderScoreboard();
   renderStudyAreas();
+  renderDiet();
+  renderProjectChecks();
+  renderReview();
   bindEvents();
 }
 
@@ -395,6 +398,62 @@ function renderStudyAreas() {
       <td><select id="status-study-${i}" data-save><option>Planned</option><option>In Progress</option><option>Ready for Exam</option><option>Completed</option><option>Paused</option></select></td>
     </tr>`);
   });
+}
+
+// ===== EDITABLE LISTS: Diet / Project / Review =====
+function slugify(text) {
+  return String(text).toLowerCase().trim().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 48) || "item";
+}
+
+const defaultDietItems = [
+  "Protein backup ready for the week",
+  "Weekend protein option planned",
+  "Protein groceries available",
+  "Hydration handled most days",
+  "No full junk mode",
+  "At least one protein meal prepped"
+];
+function getDietItems() { return settings.dietItems || defaultDietItems; }
+function dietId(text) { return `diet-${slugify(text)}`; }
+function renderDiet() {
+  const wrap = document.getElementById("dietRows");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const xp = (window.Game && Game.xpForCat) ? Game.xpForCat("protein") : 12;
+  getDietItems().forEach(item => {
+    wrap.insertAdjacentHTML("beforeend", `<label class="check quest"><input id="${dietId(item)}" type="checkbox" data-cat="protein" data-save><span class="q-text">${escapeHtml(item)}</span><span class="q-xp">+${xp}</span></label>`);
+  });
+}
+
+const defaultProjectChecks = [
+  "Code, workflow, documentation, or plan created",
+  "Progress documented",
+  "Next action is clear"
+];
+function getProjectChecks() { return settings.projectChecks || defaultProjectChecks; }
+function projId(text) { return `project-${slugify(text)}`; }
+function renderProjectChecks() {
+  const wrap = document.getElementById("projectChecks");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const xp = (window.Game && Game.xpForCat) ? Game.xpForCat("project") : 30;
+  getProjectChecks().forEach(item => {
+    wrap.insertAdjacentHTML("beforeend", `<label class="check quest"><input id="${projId(item)}" type="checkbox" data-cat="project" data-save><span class="q-text">${escapeHtml(item)}</span><span class="q-xp">+${xp}</span></label>`);
+  });
+}
+
+const defaultReviewPrompts = [
+  "Wins this week",
+  "Missed habits / friction",
+  "What needs to change next week?",
+  "One thing I refuse to drop"
+];
+function getReviewPrompts() { return settings.reviewPrompts || defaultReviewPrompts; }
+function renderReview() {
+  const ids = ["lblWins", "lblMisses", "lblChanges", "lblRefuse"];
+  const prompts = getReviewPrompts();
+  ids.forEach((id, i) => { const el = document.getElementById(id); if (el && prompts[i]) el.textContent = prompts[i]; });
 }
 
 function renderScoreboard() {
@@ -900,6 +959,33 @@ function bindEvents() {
       loadWeekFields();
     };
   }
+
+  // Editable lists: Diet / Project / Review
+  function wireListEditor(opts) {
+    const btn = document.querySelector(opts.btnSel);
+    if (btn) btn.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      document.getElementById(opts.textareaId).value = opts.get().join("\n");
+      document.getElementById(opts.modalId).classList.add("active");
+    };
+    const cancel = document.getElementById(opts.cancelId);
+    if (cancel) cancel.onclick = () => document.getElementById(opts.modalId).classList.remove("active");
+    const save = document.getElementById(opts.saveId);
+    if (save) save.onclick = async () => {
+      const lines = document.getElementById(opts.textareaId).value.split("\n").map(l => l.trim()).filter(Boolean);
+      if (!lines.length) { alert("Keep at least one item."); return; }
+      opts.set(lines);
+      await persistSettings();
+      document.getElementById(opts.modalId).classList.remove("active");
+      opts.rerender();
+      loadWeekFields();
+      updateProgress();
+      if (window.Game) Game.render();
+    };
+  }
+  wireListEditor({ btnSel: ".edit-diet-btn", modalId: "editDietModal", textareaId: "editDietTextarea", cancelId: "cancelDietBtn", saveId: "saveDietBtn", get: getDietItems, set: (l) => { settings.dietItems = l; }, rerender: renderDiet });
+  wireListEditor({ btnSel: ".edit-project-btn", modalId: "editProjectModal", textareaId: "editProjectTextarea", cancelId: "cancelProjectBtn", saveId: "saveProjectBtn", get: getProjectChecks, set: (l) => { settings.projectChecks = l; }, rerender: renderProjectChecks });
+  wireListEditor({ btnSel: ".edit-review-btn", modalId: "editReviewModal", textareaId: "editReviewTextarea", cancelId: "cancelReviewBtn", saveId: "saveReviewBtn", get: getReviewPrompts, set: (l) => { settings.reviewPrompts = l; }, rerender: renderReview });
 
   // Insights Modal
   const closeInsightsBtn = document.getElementById("closeInsightsBtn");

@@ -33,12 +33,8 @@
   const STUDY_HOUR_XP = 8;     // per certification study hour logged
   const PROJECT_HOUR_XP = 12;  // per project hour logged
 
-  // Fixed-id checkboxes that live outside the daily blueprint.
-  const DIET_CHECKS = [
-    "diet-protein-backup", "diet-weekend-plan", "diet-groceries",
-    "diet-water", "diet-no-junk-mode", "diet-meal-prep",
-  ];
-  const PROJECT_CHECKS = ["project-output", "project-documented", "project-next"];
+  // Diet & project check ids are derived at runtime from the editable lists in
+  // app.js (getDietItems/dietId, getProjectChecks/projId).
 
   // ----- Attributes (the RPG stat sheet) -----------------------------------
   const ATTR_OF_CAT = {
@@ -135,10 +131,14 @@
     for (let i = 0; i < 7; i++) {
       if (checks["workout-" + i]) award("training", XP_BY_CAT.training);
     }
-    // Diet checks (protein -> Vitality)
-    for (const id of DIET_CHECKS) if (checks[id]) award("protein", XP_BY_CAT.protein);
-    // Project checks (project -> Craft)
-    for (const id of PROJECT_CHECKS) if (checks[id]) award("project", XP_BY_CAT.project);
+    // Diet checks (protein -> Vitality) — ids derived from editable diet list
+    if (typeof getDietItems === "function" && typeof dietId === "function") {
+      for (const item of getDietItems()) if (checks[dietId(item)]) award("protein", XP_BY_CAT.protein);
+    }
+    // Project checks (project -> Craft) — ids derived from editable project list
+    if (typeof getProjectChecks === "function" && typeof projId === "function") {
+      for (const item of getProjectChecks()) if (checks[projId(item)]) award("project", XP_BY_CAT.project);
+    }
 
     // Hours logged
     let studyHours = 0;
