@@ -159,12 +159,11 @@
   // ----- Sound toggle button -----------------------------------------------
   function syncToggle() {
     const btn = document.getElementById("soundToggle");
-    if (btn) {
-      const on = sfxOn();
-      btn.textContent = on ? "🔊" : "🔇";
-      btn.setAttribute("aria-label", on ? "Mute sounds" : "Enable sounds");
-      btn.title = on ? "Sound on" : "Sound off";
-    }
+    if (!btn) return;
+    const on = sfxOn();
+    btn.innerHTML = (window.ICONS && ICONS[on ? "soundOn" : "soundOff"]) || (on ? "🔊" : "🔇");
+    btn.setAttribute("aria-label", on ? "Mute sounds" : "Enable sounds");
+    btn.title = on ? "Sound on" : "Sound off";
   }
   function wireToggle() {
     const btn = document.getElementById("soundToggle");

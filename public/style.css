@@ -1488,12 +1488,12 @@ input[type="file"] { display: none; }
   font-size: 20px; font-weight: 800; letter-spacing: -0.01em;
 }
 .weekly-chip { display: flex; align-items: center; gap: 10px; }
-.char-panel .rpg-week-ring {
+.rpg-week-ring {
   width: 70px; height: 70px; margin: 0;
   box-shadow: inset 0 0 14px rgba(0,0,0,0.5), 0 0 18px var(--score-ring-inset);
 }
-.char-panel .rpg-week-ring::before { width: 52px; height: 52px; }
-.char-panel .rpg-week-ring .score-value { font-size: 16px; text-shadow: none; }
+.rpg-week-ring::before { width: 52px; height: 52px; }
+.rpg-week-ring .score-value { font-size: 16px; text-shadow: none; }
 .weekly-chip-meta { display: flex; flex-direction: column; }
 .weekly-chip-meta .score-label { font-size: 11px; }
 .weekly-chip-meta .status-line { margin-top: 2px; font-size: 11px; max-width: 120px; line-height: 1.3; }
@@ -1684,4 +1684,111 @@ input[type="file"] { display: none; }
   .fx-combo { top: auto; bottom: 86px; right: 14px; padding: 6px 12px; }
   .fx-card { padding: 24px 36px; }
   .fx-card-lv { font-size: 40px; }
+}
+
+/* ===========================================================================
+ * HEADER + CHAR SCREEN REFINEMENTS (v2)
+ * ======================================================================== */
+.ic {
+  width: 20px; height: 20px;
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+  display: block;
+}
+/* header icon cluster */
+.nav-icon { width: 42px; padding: 9px; }
+.nav-icon .ic { width: 20px; height: 20px; margin: 0 auto; }
+.nav-icon.danger { color: #fca5a5; background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.22); }
+.nav-icon.danger:hover { background: rgba(239,68,68,0.22); color: #fecaca; }
+.nav-divider { width: 1px; height: 26px; background: var(--line-strong); margin: 0 6px; align-self: center; padding: 0; }
+.tab-icon .ic { width: 23px; height: 23px; }
+
+/* editable callsign */
+.callsign { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; min-height: 36px; }
+.callsign-text {
+  font-family: 'Outfit', sans-serif; font-weight: 900;
+  font-size: clamp(22px, 2.6vw, 30px); line-height: 1.05; letter-spacing: -0.03em;
+  background: var(--h1-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.callsign-edit {
+  background: transparent; border: none; padding: 5px; border-radius: 8px;
+  color: var(--muted); cursor: pointer; opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.callsign:hover .callsign-edit { opacity: 0.65; }
+.callsign-edit:hover { opacity: 1; color: var(--text); background: rgba(255,255,255,0.07); transform: none; box-shadow: none; }
+.callsign-edit .ic { width: 16px; height: 16px; }
+.callsign-input {
+  font-family: 'Outfit', sans-serif; font-weight: 900;
+  font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.03em;
+  background: rgba(0,0,0,0.45); border: 1px solid var(--line-strong); border-radius: 10px;
+  padding: 2px 12px; color: var(--text); width: auto; max-width: 100%; box-shadow: none;
+}
+
+/* rank subline */
+.char-subline {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+  font-size: 13px; font-weight: 700; color: var(--text-dim);
+}
+.rank-insignia.sm { width: 18px; height: 18px; }
+.rank-insignia.sm .ic { width: 18px; height: 18px; }
+.char-subline .rank-pips { margin-left: 2px; }
+
+/* level orb: conic XP-to-next progress ring + gentle glow */
+.lvl-orb::after {
+  content: "";
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  padding: 0;
+  background: conic-gradient(var(--accent-primary) var(--xp-deg, 0deg), rgba(255,255,255,0.08) var(--xp-deg, 0deg));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  -webkit-mask-composite: source-over;
+          mask-composite: add;
+  pointer-events: none;
+  transition: --xp-deg 0.6s ease;
+}
+.lvl-orb { animation: orb-glow 3.8s ease-in-out infinite; }
+@keyframes orb-glow {
+  0%, 100% { box-shadow: 0 0 34px var(--score-glow), inset 0 3px 12px rgba(0,0,0,0.65); }
+  50%      { box-shadow: 0 0 56px var(--score-glow), inset 0 3px 12px rgba(0,0,0,0.65); }
+}
+
+/* weekly chip relocated into the hero */
+.week-chip {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0; padding-left: 20px;
+  border-left: 1px solid var(--line);
+}
+.week-chip-meta { display: flex; flex-direction: column; }
+.week-chip-meta .score-label { font-size: 11px; }
+.week-chip-meta .status-line { margin-top: 2px; font-size: 11px; max-width: 132px; line-height: 1.3; }
+
+/* active mission banner */
+.mission-banner {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-primary);
+}
+.mission-ico { color: var(--accent-primary); display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; filter: drop-shadow(0 0 6px var(--score-glow)); }
+.mission-ico .ic { width: 24px; height: 24px; }
+.mission-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mission-body input { background: transparent; border: none; padding: 0; font-size: 16px; font-weight: 700; color: var(--text); box-shadow: none; }
+.mission-body input:focus { box-shadow: none; }
+
+/* week-nav chevrons */
+.char-actions button { gap: 5px; }
+.char-actions .ic { width: 15px; height: 15px; }
+
+/* attributes panel head + bigger radar */
+.panel-head { justify-content: flex-start; align-items: baseline; gap: 10px; }
+.panel-sub { font-size: 12px; color: var(--muted); font-weight: 600; }
+.attr-radar-svg { max-width: 270px; }
+
+@media (max-width: 768px) {
+  .char-identity { gap: 14px; align-items: flex-start; }
+  .week-chip { display: none; }
+  .callsign-text, .callsign-input { font-size: 20px; }
 }

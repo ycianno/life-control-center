@@ -12,6 +12,14 @@
 (function () {
   "use strict";
 
+  // ----- Inline SVG icons (shared with fx.js via window.ICONS) -------------
+  const ICONS = {
+    pencil: '<svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
+    soundOn: '<svg viewBox="0 0 24 24" class="ic"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>',
+    soundOff: '<svg viewBox="0 0 24 24" class="ic"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m17 9 5 6"/><path d="m22 9-5 6"/></svg>',
+  };
+  window.ICONS = ICONS;
+
   // ----- XP economy --------------------------------------------------------
   // XP per completed check, by category (categoryFor() in app.js).
   const XP_BY_CAT = {
@@ -188,7 +196,7 @@
   function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
 
   function attrRadarSvg(attrs) {
-    const W = 250, H = 220, cx = W / 2, cy = 100, R = 72, gap = 19;
+    const W = 272, H = 232, cx = 136, cy = 108, R = 82, gap = 20;
     const n = attrs.length;
     const maxLevel = Math.max(1, ...attrs.map(a => a.level));
     const ang = i => (-90 + (360 / n) * i) * Math.PI / 180;
@@ -229,8 +237,10 @@
     const p = computeProfile();
 
     setText("lvlNum", p.level);
-    setText("rankName", p.rank.name);
-    setText("rankTier", "Tier " + p.rank.tier);
+    setText("charSubline", p.rank.name + " · Tier " + p.rank.tier);
+    if (!editingCallsign) renderCallsign();
+    const orb = document.getElementById("lvlOrb");
+    if (orb) orb.style.setProperty("--xp-deg", ((p.xpIntoLevel / p.xpForNext) * 360).toFixed(1) + "deg");
     setText("lifetimeXp", p.lifetimeXp.toLocaleString());
     setText("weeklyXp", "+" + p.weeklyXp.toLocaleString());
     setText("weeksActive", p.activeWeeks);
@@ -289,6 +299,42 @@
     t.classList.remove("show"); void t.offsetWidth; t.classList.add("show");
     clearTimeout(t._timer);
     t._timer = setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+  // ----- Editable callsign -------------------------------------------------
+  let editingCallsign = false;
+  function callsignName() {
+    return (typeof settings !== "undefined" && settings && settings.callsign) ? settings.callsign : "Player One";
+  }
+  function renderCallsign() {
+    const wrap = document.getElementById("callsign");
+    if (!wrap) return;
+    wrap.innerHTML =
+      `<span class="callsign-text">${escapeHtml(callsignName())}</span>` +
+      `<button class="callsign-edit" id="callsignEdit" aria-label="Rename operator" title="Rename">${ICONS.pencil}</button>`;
+    const btn = document.getElementById("callsignEdit");
+    if (btn) btn.onclick = startCallsignEdit;
+  }
+  function startCallsignEdit() {
+    const wrap = document.getElementById("callsign");
+    if (!wrap || wrap.querySelector("input")) return;
+    editingCallsign = true;
+    wrap.innerHTML = `<input id="callsignInput" class="callsign-input" maxlength="28" value="${escapeHtml(callsignName())}">`;
+    const inp = document.getElementById("callsignInput");
+    inp.focus(); inp.select();
+    const commit = (save) => {
+      editingCallsign = false;
+      if (save && typeof settings !== "undefined" && settings) {
+        settings.callsign = inp.value.trim() || "Operator";
+        if (typeof persistSettings === "function") persistSettings();
+      }
+      renderCallsign();
+    };
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); commit(true); }
+      else if (e.key === "Escape") { e.preventDefault(); commit(false); }
+    });
+    inp.addEventListener("blur", () => commit(true));
   }
 
   window.Game = { render, computeProfile, levelFromXp, xpForLevel, rankFor, checkXp, attrColorForCat };

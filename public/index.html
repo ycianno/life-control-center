@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#040406" />
   <link rel="apple-touch-icon" href="/icon.svg" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
   <main class="shell">
@@ -22,32 +22,33 @@
         <a href="#workout" class="desktop-nav-item">Training</a>
         <a href="#study" class="desktop-nav-item">Study</a>
         <a href="#projects" class="desktop-nav-item">Projects</a>
-        <button class="ghost desktop-nav-item" id="openReportBtn">📊 Reports</button>
-        <button class="ghost desktop-nav-item" id="expandAllBtn" title="Expand All">⬇️</button>
-        <button class="ghost desktop-nav-item" id="collapseAllBtn" title="Collapse All">⬆️</button>
-        <button class="ghost desktop-nav-item" id="soundToggle" title="Sound on">🔊</button>
-        <button class="ghost desktop-nav-item" id="openSettingsBtn">⚙️ Settings</button>
-        <a href="/api/logout" class="danger desktop-nav-item" style="margin-left: 8px;">Logout</a>
+        <span class="nav-divider desktop-nav-item" aria-hidden="true"></span>
+        <button class="ghost nav-icon desktop-nav-item" id="openReportBtn" title="Reports" aria-label="Reports"><svg viewBox="0 0 24 24" class="ic"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg></button>
+        <button class="ghost nav-icon desktop-nav-item" id="expandAllBtn" title="Expand all" aria-label="Expand all"><svg viewBox="0 0 24 24" class="ic"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button>
+        <button class="ghost nav-icon desktop-nav-item" id="collapseAllBtn" title="Collapse all" aria-label="Collapse all"><svg viewBox="0 0 24 24" class="ic"><path d="M8 5l4 4 4-4M8 19l4-4 4 4"/></svg></button>
+        <button class="ghost nav-icon desktop-nav-item" id="soundToggle" title="Sound on" aria-label="Mute sounds"><svg viewBox="0 0 24 24" class="ic"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg></button>
+        <button class="ghost nav-icon desktop-nav-item" id="openSettingsBtn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" class="ic"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
+        <a href="/api/logout" class="danger nav-icon desktop-nav-item" title="Logout" aria-label="Logout" style="margin-left: 6px;"><svg viewBox="0 0 24 24" class="ic"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></a>
 
         <!-- Mobile bottom tab bar -->
         <button class="tab-btn active" data-target="daily" id="tabDaily">
-          <span class="tab-icon">📋</span>
+          <span class="tab-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
           <span class="tab-label">Today</span>
         </button>
         <button class="tab-btn" data-target="scoreboard" id="tabScore">
-          <span class="tab-icon">📊</span>
+          <span class="tab-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg></span>
           <span class="tab-label">Score</span>
         </button>
         <button class="tab-btn" data-target="workout" id="tabTrain">
-          <span class="tab-icon">💪</span>
+          <span class="tab-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
           <span class="tab-label">Train</span>
         </button>
         <button class="tab-btn" data-target="study" id="tabStudy">
-          <span class="tab-icon">📚</span>
+          <span class="tab-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
           <span class="tab-label">Study</span>
         </button>
         <button class="tab-btn" data-target="more" id="tabMore">
-          <span class="tab-icon">☰</span>
+          <span class="tab-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M4 12h16M4 6h16M4 18h16"/></svg></span>
           <span class="tab-label">More</span>
         </button>
       </nav>
@@ -87,33 +88,31 @@
 
     <section class="hero">
       <div class="hero-main glass char-screen" id="charScreen">
-        <div class="char-top">
-          <div class="rank-badge">
-            <span class="rank-insignia" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <div class="rank-text">
-              <div class="rank-name" id="rankName">Bronze</div>
-              <div class="rank-tier" id="rankTier">Tier I</div>
-            </div>
-            <div class="rank-pips" id="rankPips"></div>
-          </div>
-          <span class="eyebrow">Operator Profile</span>
-        </div>
-
         <div class="char-identity">
           <div class="lvl-orb" id="lvlOrb">
             <span class="lvl-k">LVL</span>
             <span class="lvl-num" id="lvlNum">1</span>
           </div>
           <div class="char-meta">
-            <div class="char-name">Everyday Non-Negotiables</div>
+            <div class="callsign" id="callsign"></div>
+            <div class="char-subline">
+              <span class="rank-insignia sm" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/><path d="M8.5 11.5l2.5 2.5 4.5-5"/></svg></span>
+              <span id="charSubline">Bronze · Tier I</span>
+              <span class="rank-pips" id="rankPips"></span>
+            </div>
             <div class="xp-block">
               <div class="xp-bar"><div class="xp-bar-fill" id="xpBarFill"></div></div>
               <div class="xp-legend">
                 <span id="xpText">0 / 100 XP</span>
                 <span id="xpNextLabel" class="muted">to Level 2</span>
               </div>
+            </div>
+          </div>
+          <div class="week-chip">
+            <div class="score-ring rpg-week-ring" id="scoreRing"><div class="score-value" id="scoreValue">0%</div></div>
+            <div class="week-chip-meta">
+              <span class="score-label">This Week</span>
+              <span class="status-line" id="statusLine">—</span>
             </div>
           </div>
         </div>
@@ -124,15 +123,18 @@
           <div class="cstat"><span class="cstat-v" id="weeksActive">0</span><span class="cstat-k">Active Weeks</span></div>
         </div>
 
-        <div class="mini mission-mini">
-          <span class="label">Current Mission</span>
-          <input id="mission" data-save type="text" placeholder="Example: Hit 14 study hours + 5 workouts">
+        <div class="mission-banner">
+          <span class="mission-ico" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+          <div class="mission-body">
+            <span class="label">Active Mission</span>
+            <input id="mission" data-save type="text" placeholder="Example: Hit 14 study hours + 5 workouts">
+          </div>
         </div>
 
         <div class="actions char-actions">
           <button class="primary" id="currentWeekBtn">This Week</button>
-          <button id="prevWeekBtn">◀ Prev</button>
-          <button id="nextWeekBtn">Next ▶</button>
+          <button id="prevWeekBtn"><svg viewBox="0 0 24 24" class="ic"><path d="M15 18l-6-6 6-6"/></svg>Prev</button>
+          <button id="nextWeekBtn">Next<svg viewBox="0 0 24 24" class="ic"><path d="M9 18l6-6-6-6"/></svg></button>
           <span class="week-range-tag"><span id="weekRangeText">—</span> · <span id="todayText">—</span></span>
           <button id="copyBtn">Copy Summary</button>
         </div>
@@ -141,13 +143,7 @@
       <aside class="panel glass char-panel">
         <div class="panel-head">
           <h3 class="panel-title">Attributes</h3>
-          <div class="weekly-chip">
-            <div class="score-ring rpg-week-ring" id="scoreRing"><div class="score-value" id="scoreValue">0%</div></div>
-            <div class="weekly-chip-meta">
-              <span class="score-label">This Week</span>
-              <span class="status-line" id="statusLine">—</span>
-            </div>
-          </div>
+          <span class="panel-sub">Your stat sheet</span>
         </div>
         <div class="attr-radar" id="attrRadar"></div>
         <div class="attr-legend" id="attrLegend"></div>
@@ -392,8 +388,8 @@
     <p class="footer-note">Data is saved on your server by week using a versioned SQLite database. Use Export Backup before major changes.</p>
   </main>
 
-  <script src="game.js?v=2"></script>
-  <script src="fx.js?v=1"></script>
+  <script src="game.js?v=3"></script>
+  <script src="fx.js?v=2"></script>
   <script src="app.js?v=5"></script>
 </body>
 </html>
