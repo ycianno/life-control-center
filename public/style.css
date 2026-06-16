@@ -1886,3 +1886,24 @@ input[type="file"] { display: none; }
 
 /* settings tabs: a touch more presence */
 .settings-tab { font-size: 13px; letter-spacing: 0.01em; }
+
+/* ===========================================================================
+ * SCOREBOARD COHESION — color-code metrics to the attribute palette
+ * ======================================================================== */
+.metric-number {
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+#bar-discipline { background: #38bdf8; }
+#metric-discipline { color: #38bdf8; }
+#bar-training { background: #fb7185; }
+#metric-training { color: #fb7185; }
+#bar-protein { background: #34d399; }
+#metric-protein { color: #34d399; }
+#bar-study, #bar-career-hours { background: #a78bfa; }
+#metric-study, #metric-career-hours { color: #a78bfa; }
+#bar-projects-hours, #bar-projects-bonus { background: #fbbf24; }
+#metric-projects-hours, #metric-projects-bonus { color: #fbbf24; }
+#bar-review { background: var(--accent-primary); }
+#metric-review { color: var(--accent-primary); }
