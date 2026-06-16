@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#040406" />
   <link rel="apple-touch-icon" href="/icon.svg" />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 <body>
   <main class="shell">
@@ -85,33 +85,76 @@
     </div>
 
     <section class="hero">
-      <div class="hero-main glass">
-        <span class="eyebrow">Autonomous Weekly System</span>
-        <h1>Everyday<br>Non-Negotiables</h1>
-        <p class="subtitle">A true-black control center for discipline, training, certification progress, project execution, and weekly review. The week is auto-selected and each week keeps its own saved data.</p>
-        <div class="hero-grid">
-          <div class="mini"><span class="label">Active Week</span><strong id="weekRangeText">—</strong></div>
-          <div class="mini"><span class="label">Today</span><strong id="todayText">—</strong></div>
-          <div class="mini"><span class="label">Current Mission</span><input id="mission" data-save type="text" placeholder="Example: Hit 14 study hours + 5 workouts"></div>
+      <div class="hero-main glass char-screen" id="charScreen">
+        <div class="char-top">
+          <div class="rank-badge">
+            <span class="rank-insignia" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <div class="rank-text">
+              <div class="rank-name" id="rankName">Bronze</div>
+              <div class="rank-tier" id="rankTier">Tier I</div>
+            </div>
+            <div class="rank-pips" id="rankPips"></div>
+          </div>
+          <span class="eyebrow">Operator Profile</span>
         </div>
-        <div class="actions">
-          <button class="primary" id="currentWeekBtn">Jump to Current Week</button>
-          <button id="prevWeekBtn">Previous Week</button>
-          <button id="nextWeekBtn">Next Week</button>
-          <button id="copyBtn">Copy Weekly Summary</button>
+
+        <div class="char-identity">
+          <div class="lvl-orb" id="lvlOrb">
+            <span class="lvl-k">LVL</span>
+            <span class="lvl-num" id="lvlNum">1</span>
+          </div>
+          <div class="char-meta">
+            <div class="char-name">Everyday Non-Negotiables</div>
+            <div class="xp-block">
+              <div class="xp-bar"><div class="xp-bar-fill" id="xpBarFill"></div></div>
+              <div class="xp-legend">
+                <span id="xpText">0 / 100 XP</span>
+                <span id="xpNextLabel" class="muted">to Level 2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="char-stats">
+          <div class="cstat"><span class="cstat-v" id="lifetimeXp">0</span><span class="cstat-k">Lifetime XP</span></div>
+          <div class="cstat"><span class="cstat-v" id="weeklyXp">+0</span><span class="cstat-k">This Week</span></div>
+          <div class="cstat"><span class="cstat-v" id="weeksActive">0</span><span class="cstat-k">Active Weeks</span></div>
+        </div>
+
+        <div class="mini mission-mini">
+          <span class="label">Current Mission</span>
+          <input id="mission" data-save type="text" placeholder="Example: Hit 14 study hours + 5 workouts">
+        </div>
+
+        <div class="actions char-actions">
+          <button class="primary" id="currentWeekBtn">This Week</button>
+          <button id="prevWeekBtn">◀ Prev</button>
+          <button id="nextWeekBtn">Next ▶</button>
+          <span class="week-range-tag"><span id="weekRangeText">—</span> · <span id="todayText">—</span></span>
+          <button id="copyBtn">Copy Summary</button>
         </div>
       </div>
-      <aside class="panel glass">
-        <div class="score-wrap">
-          <div class="score-ring" id="scoreRing"><div class="score-value" id="scoreValue">0%</div></div>
-          <div class="score-label">Weekly Completion</div>
-          <div class="status-line" id="statusLine">Minimum structure not calculated yet.</div>
+
+      <aside class="panel glass char-panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Attributes</h3>
+          <div class="weekly-chip">
+            <div class="score-ring rpg-week-ring" id="scoreRing"><div class="score-value" id="scoreValue">0%</div></div>
+            <div class="weekly-chip-meta">
+              <span class="score-label">This Week</span>
+              <span class="status-line" id="statusLine">—</span>
+            </div>
+          </div>
         </div>
-        <div class="actions">
-          <button id="exportBtn">Export Backup</button>
-          <label class="file-label" for="importFile">Import Backup</label>
+        <div class="attr-radar" id="attrRadar"></div>
+        <div class="attr-legend" id="attrLegend"></div>
+        <div class="actions util-actions">
+          <button id="exportBtn">Export</button>
+          <label class="file-label" for="importFile">Import</label>
           <input id="importFile" type="file" accept="application/json,.json" />
-          <button class="danger" id="resetBtn">Reset This Week</button>
+          <button class="danger" id="resetBtn">Reset Week</button>
         </div>
       </aside>
     </section>
@@ -348,6 +391,7 @@
     <p class="footer-note">Data is saved on your server by week using a versioned SQLite database. Use Export Backup before major changes.</p>
   </main>
 
-  <script src="app.js?v=4"></script>
+  <script src="game.js?v=1"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

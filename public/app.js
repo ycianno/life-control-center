@@ -486,7 +486,8 @@ function applyWeekToUI() {
   loadWeekFields();
   updateProgress();
   updateStreakAndHeatmap();
-  
+  if (window.Game) Game.render();
+
   // Apply mobile smart layout after rendering
   applyMobileSmartLayout();
 }
@@ -527,7 +528,7 @@ function saveWeekField(el) {
   else wk.fields[el.id] = el.value;
   wk.updatedAt = new Date().toISOString();
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { persistDatabase(); updateStreakAndHeatmap(); }, 80);
+  saveTimer = setTimeout(() => { persistDatabase(); updateStreakAndHeatmap(); if (window.Game) Game.render(); }, 80);
 }
 
 function percent(done, total) { return total ? Math.round((done / total) * 100) : 0; }
