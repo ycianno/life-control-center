@@ -3,7 +3,7 @@
  * redirects are respected), offline shell fallback. API is never cached —
  * app.js already falls back to localStorage when offline.
  */
-const CACHE = 'lcc-v3';
+const CACHE = 'lcc-v4';
 const SHELL = '/index.html';
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -47,5 +47,31 @@ self.addEventListener('fetch', (e) => {
         return hit || net;
       })
     )
+  );
+});
+
+// ----- Web push -----
+self.addEventListener('push', (e) => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (_) {}
+  const title = data.title || 'Forge';
+  const opts = {
+    body: data.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: data.tag || 'forge',
+    data: { url: data.url || '/' },
+  };
+  e.waitUntil(self.registration.showNotification(title, opts));
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) { if ('focus' in w) return w.focus(); }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
   );
 });

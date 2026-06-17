@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+const webpush = require('web-push');
 
 const APP_PASSWORD = process.env.APP_PASSWORD || 'changeme';
 
@@ -35,6 +36,11 @@ db.exec(`
     notes TEXT,
     week_key TEXT
   );
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    endpoint TEXT PRIMARY KEY,
+    sub TEXT,
+    created_at TEXT
+  );
 `);
 
 // Persisted random secret used to sign the session cookie (survives restarts).
@@ -46,6 +52,19 @@ function getSessionSecret() {
   return secret;
 }
 const SESSION_SECRET = process.env.SESSION_SECRET || getSessionSecret();
+
+// Persisted VAPID keys for Web Push (generated once, survive restarts).
+function getVapid() {
+  const pub = db.prepare("SELECT value FROM settings WHERE key = 'vapid_public'").get();
+  const priv = db.prepare("SELECT value FROM settings WHERE key = 'vapid_private'").get();
+  if (pub && priv) return { publicKey: pub.value, privateKey: priv.value };
+  const keys = webpush.generateVAPIDKeys();
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('vapid_public', ?)").run(keys.publicKey);
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('vapid_private', ?)").run(keys.privateKey);
+  return keys;
+}
+const VAPID = getVapid();
+webpush.setVapidDetails('mailto:forge@example.com', VAPID.publicKey, VAPID.privateKey);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser(SESSION_SECRET));
@@ -132,6 +151,24 @@ app.post('/api/achievements', (req, res) => {
 
 app.delete('/api/achievements/:id', (req, res) => {
   db.prepare('DELETE FROM achievements WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// ===== Web Push =====
+app.get('/api/push/key', (req, res) => {
+  res.json({ key: VAPID.publicKey });
+});
+app.post('/api/push/subscribe', (req, res) => {
+  const sub = req.body;
+  if (!sub || !sub.endpoint) return res.status(400).json({ error: 'invalid subscription' });
+  db.prepare("INSERT OR REPLACE INTO push_subscriptions (endpoint, sub, created_at) VALUES (?, ?, ?)")
+    .run(sub.endpoint, JSON.stringify(sub), new Date().toISOString());
+  res.json({ success: true });
+});
+app.post('/api/push/unsubscribe', (req, res) => {
+  if (req.body && req.body.endpoint) {
+    db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").run(req.body.endpoint);
+  }
   res.json({ success: true });
 });
 

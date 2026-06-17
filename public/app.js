@@ -857,6 +857,28 @@ function renderSectionToggles() {
   ).join("");
 }
 
+// ===== PUSH REMINDERS =====
+function getReminders() { return settings.reminders || { enabled: false, morning: "08:00", evening: "19:00" }; }
+function urlBase64ToUint8Array(b64) {
+  const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+  const base = (b64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+async function enableReminders() {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) { alert("Push isn't supported on this browser."); return false; }
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { alert("Notifications were not allowed."); return false; }
+    const reg = await navigator.serviceWorker.ready;
+    const { key } = await (await fetch("/api/push/key")).json();
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) });
+    await fetch("/api/push/subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sub) });
+    return true;
+  } catch (e) { console.error("enableReminders failed", e); alert("Could not enable reminders: " + e.message); return false; }
+}
+
 function openSettings() {
   document.getElementById("cfgWorkoutMin").value = settings.workoutMin || 5;
   document.getElementById("cfgProteinMin").value = settings.proteinMin || 7;
@@ -866,6 +888,10 @@ function openSettings() {
   const sg = document.getElementById("cfgStreakGrade"); if (sg) sg.value = settings.streakGrade || 75;
   const cs = document.getElementById("cfgCallsign"); if (cs) cs.value = settings.callsign || "";
   renderSectionToggles();
+  const rem = getReminders();
+  const re = document.getElementById("cfgRemindEnable"); if (re) re.checked = !!rem.enabled;
+  const rm = document.getElementById("cfgRemindMorning"); if (rm) rm.value = rem.morning || "08:00";
+  const rv = document.getElementById("cfgRemindEvening"); if (rv) rv.value = rem.evening || "19:00";
   renderThemeGrid();
   renderTrophyCase();
   if (window.Game && Game.renderBadgeWall) Game.renderBadgeWall();
@@ -946,6 +972,16 @@ function bindEvents() {
       const sg = document.getElementById("cfgStreakGrade"); if (sg) settings.streakGrade = Math.min(100, Math.max(1, Number(sg.value) || 75));
       const cs = document.getElementById("cfgCallsign"); if (cs && cs.value.trim()) settings.callsign = cs.value.trim();
       settings.hiddenSections = [...document.querySelectorAll('#sectionToggles input[data-section]')].filter(c => !c.checked).map(c => c.dataset.section);
+      const reEnable = document.getElementById("cfgRemindEnable");
+      if (reEnable) {
+        const wasEnabled = (settings.reminders || {}).enabled;
+        settings.reminders = {
+          enabled: reEnable.checked,
+          morning: (document.getElementById("cfgRemindMorning") || {}).value || "08:00",
+          evening: (document.getElementById("cfgRemindEvening") || {}).value || "19:00",
+        };
+        if (reEnable.checked && !wasEnabled) await enableReminders();
+      }
       await persistSettings();
       document.getElementById("settingsModal").classList.remove("active");
       applySectionVisibility();

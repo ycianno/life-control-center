@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#040406" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 <body>
   <main class="shell">
@@ -293,6 +293,12 @@
           <input type="text" id="cfgCallsign" placeholder="Player One" maxlength="28">
           <label class="label" style="margin-top:18px;">Visible sections</label>
           <div class="section-toggles" id="sectionToggles"></div>
+
+          <label class="label" style="margin-top:18px;">Reminders (phone push)</label>
+          <label class="check" style="margin:0 0 4px;"><input type="checkbox" id="cfgRemindEnable"><span>Enable push reminders on this device</span></label>
+          <div class="set-row"><div class="set-row-text"><span class="set-row-label">Morning ping</span><span class="set-row-hint">Quests waiting today</span></div><input type="time" id="cfgRemindMorning" value="08:00" style="width:120px;"></div>
+          <div class="set-row"><div class="set-row-text"><span class="set-row-label">Evening nudge</span><span class="set-row-hint">Only if the day isn't done</span></div><input type="time" id="cfgRemindEvening" value="19:00" style="width:120px;"></div>
+          <p class="hint" style="margin-top:8px;">On iPhone: add Forge to your Home Screen first, then enable.</p>
         </div>
 
         <!-- Appearance Tab -->
@@ -459,6 +465,6 @@
 
   <script src="game.js?v=8"></script>
   <script src="fx.js?v=4"></script>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
