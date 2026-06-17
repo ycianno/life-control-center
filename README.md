@@ -58,7 +58,7 @@ Life Control Center is designed to be hosted on your own infrastructure (Proxmox
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/life-control-center.git
+   git clone https://github.com/ycianno/life-control-center.git
    cd life-control-center
    ```
 
