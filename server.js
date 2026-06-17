@@ -37,13 +37,23 @@ db.exec(`
   );
 `);
 
+// Persisted random secret used to sign the session cookie (survives restarts).
+function getSessionSecret() {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'session_secret'").get();
+  if (row && row.value) return row.value;
+  const secret = require('crypto').randomBytes(48).toString('hex');
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('session_secret', ?)").run(secret);
+  return secret;
+}
+const SESSION_SECRET = process.env.SESSION_SECRET || getSessionSecret();
+
 app.use(express.json({ limit: '10mb' }));
-app.use(cookieParser());
+app.use(cookieParser(SESSION_SECRET));
 
 app.post('/api/login', (req, res) => {
   const { password } = req.body;
   if (password === APP_PASSWORD) {
-    res.cookie('auth_token', 'authenticated', { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 30 }); // 30 days
+    res.cookie('auth_token', 'ok', { signed: true, httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 30 }); // 30 days, signed
     res.json({ success: true });
   } else {
     res.status(401).json({ success: false, message: 'Invalid password' });
@@ -57,7 +67,7 @@ app.get('/api/logout', (req, res) => {
 
 // Middleware to protect routes
 const requireAuth = (req, res, next) => {
-  if (req.cookies.auth_token === 'authenticated') {
+  if (req.signedCookies.auth_token === 'ok') {
     next();
   } else {
     if (req.path.startsWith('/api/')) {
