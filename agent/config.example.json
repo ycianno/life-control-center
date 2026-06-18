@@ -1,0 +1,14 @@
+{
+  "database_path": "/path/to/the-forge/data/database.sqlite",
+  "ollama_url": "http://localhost:11434",
+  "ollama_model": "qwen2.5:3b",
+  "discord_webhook_url": "https://discord.com/api/webhooks/XXXXXXXX/XXXXXXXX",
+  "persona": "game_master",
+  "quiet_hours_start": 22,
+  "quiet_hours_end": 8,
+  "silent_if_complete": true,
+  "ollama_keep_alive": 0,
+  "ollama_num_ctx": 1024,
+  "ollama_num_predict": 400,
+  "ollama_temperature": 0.8
+}

@@ -1,85 +1,121 @@
 # The Forge
 
 <div align="center">
-  <p><strong>A private, highly opinionated, self-hosted control center for your life.</strong></p>
-  <p><em>"Do not make a bad day a bad week. Maintain the structure, stack small wins, and keep moving toward the version of you that can handle bigger responsibilities."</em></p>
+  <img src="public/icon.svg" width="96" height="96" alt="The Forge logo" />
+  <h3>Turn your real life into an RPG.</h3>
+  <p><strong>A self-hosted, single-user habit tracker that gamifies your goals</strong> — XP, levels, life attributes, daily quests, streaks, badges, and a weekly boss. No accounts, no cloud, no tracking. Your data lives in one SQLite file on your own machine.</p>
+  <p>
+    <img alt="Node.js" src="https://img.shields.io/badge/Node.js-20-339933?logo=node.js&logoColor=white">
+    <img alt="SQLite" src="https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite&logoColor=white">
+    <img alt="Docker" src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green">
+  </p>
 </div>
 
 ---
 
-## 🦅 The Philosophy
+## Why The Forge?
 
-Most habit trackers are either too simple (checkboxes with no context) or too complex (bloated with features you don't need). **Life Control Center** was built from the ground up to solve a specific problem: bridging the gap between daily execution and long-term career/fitness goals. 
+Most habit trackers are a flat list of checkboxes — easy to ignore, easy to abandon. The Forge wraps your daily discipline in a game loop so that doing the boring, important things feels rewarding:
 
-It acts as a ruthless, single-pane-of-glass dashboard for your non-negotiables. It enforces weekly reviews, tracks project output instead of just "busy work," and connects your daily studying to concrete career objectives.
+- Every checked task awards **XP** with a sound, a particle pop, and a combo meter.
+- XP flows into a persistent **level + rank** and five **life attributes** you can watch grow on a radar chart.
+- A rotating **weekly boss** gives you something to beat each week; falling behind on its "weak" attribute lets it survive.
+- **Streaks**, **badges**, and **milestones** keep the dopamine coming.
 
-## 🌟 Core Features
+It's opinionated and built for one person: you. Self-host it, set a password, and own your data.
 
-### 1. The Dashboard & Scoreboard
-- **Weekly Scoreboard:** A real-time breakdown of your performance across Core Discipline, Training, Diet, Study, and Project execution.
-- **Yearly Heatmap:** A responsive 52-week timeline. Maintain a 75% execution rate each week to keep your active streak alive (🔥). Clicking any week provides instant insights and pulls up your historical review notes.
-- **Active Missions:** Set a primary target for the week so you never lose sight of the big picture.
+## Features
 
-### 2. Execution & Tracking
-- **Daily Checklists:** Granular daily tracking (Monday-Sunday) that dynamically calculates your success rate.
-- **Workout Progression:** A dedicated module for tracking daily workout plans, reps, weights, and notes. Ensures progressive overload is documented.
-- **Diet & Protein:** Checkboxes to ensure dietary minimums (like protein goals and meal prep) are met.
-- **Career & Certifications:** Log hours against specific certifications or technical skills. Watch the progress bar fill up against your weekly target.
-- **Project Work:** Differentiates between core commitment hours and "bonus stretch" hours, tracking whether you produced valid output (code, documentation, workflows).
+| | |
+|---|---|
+| 🎮 **Game engine** | Lifetime XP, leveling curve, Bronze→Master ranks, and 5 independently-leveling attributes (Discipline, Body, Mind, Vitality, Craft) — all derived from the checks you already make. |
+| ✅ **Daily quests** | A per-day checklist where each task awards XP. Combos, haptics, and a "Day Cleared" celebration when you finish the day. |
+| 🔥 **Streaks & freeze** | Daily and weekly streaks with milestone rewards (7 / 30 / 100 / 365 days) and a configurable "freeze" grace day so one bad day doesn't reset everything. |
+| 🏆 **Badges & trophies** | Auto-unlocking achievement badges across four rarities, plus a manual trophy case for real-world wins (certifications, PRs, goals). |
+| 👹 **Weekly boss** | A deterministic boss each week whose HP drains as you complete your week — with double damage to its weak attribute. Defeat it for a badge and a victory celebration. |
+| ⏱️ **Focus timer** | A built-in Pomodoro/focus timer that logs elapsed hours straight into your study/project goals. |
+| 📊 **Analytics** | Weekly completion & XP trends, by-weekday breakdowns, and your most-skipped quests. |
+| 📅 **Goal tracking** | Certifications & study goals with deadline countdowns and pacing, weekly project-output tracking, diet/protein checklists, and a structured weekly review. |
+| 🎨 **10 themes** | A full palette of distinct dark themes (True Black, Crimson, Deep Forest, Synthwave, Nord, Carbon, and more). |
+| 📱 **PWA + push** | Installable on iOS/Android, works offline, and supports optional web-push reminders. |
+| 🤖 **Optional Discord agent** | "Hermes" — a local-AI companion (via [Ollama](https://ollama.com)) that reads your progress and nudges you on Discord. See [`agent/`](agent/). |
 
-### 3. Dynamic & Editable
-- **No Code Required:** Easily edit your Workout split, Scoreboard metrics, and Certification study plans directly through intuitive UI modals.
-- **Dynamic System Goals:** Configure your baseline expectations (e.g., minimum workouts per week, minimum study hours) via the Settings interface. 
+> Everything (goals, quests, diet, projects, review prompts, difficulty) is editable in-app — no code changes required.
 
-### 4. Review & Analytics
-- **Weekly Review:** Built-in reflection inputs for logging "Wins", "Friction", and "Adaptations" so you iterate and improve every week.
-- **Performance Reports:** Generate plain-text reports summarizing your execution over the past 4 weeks or the entire year, aggregating all your notes to identify trends.
+## Screenshots
 
-## 🎨 Premium Aesthetics
+<div align="center">
+  <img src="docs/screenshots/character.png" width="80%" alt="Character screen with level orb, attribute radar, and contribution heatmap" />
+  <br/><br/>
+  <img src="docs/screenshots/themes.png" width="80%" alt="A selection of the built-in themes" />
+</div>
 
-The interface is built to wow. It utilizes a strict, custom **True Black Glassmorphism** design language.
-- Ambient mesh gradients and radial glows.
-- Smooth micro-animations, hover scaling, and deep box-shadows.
-- A strict, actionable color palette: Green (Success), Purple (Streaks/Primary), Blue (Information), and Red (Fail States).
+## Quick start (Docker)
 
-## 🛠️ Technology Stack
+The Forge is designed to run on your own hardware — a Raspberry Pi, a Proxmox VM, a NAS, or any VPS.
 
-We rejected heavy frontend frameworks to ensure maximum performance and total control over the DOM.
+```bash
+git clone https://github.com/ycianno/the-forge.git
+cd the-forge
 
-- **Frontend:** Vanilla HTML5, CSS3, and JavaScript.
-- **Backend:** Node.js & Express.
-- **Database:** SQLite3. (All data is securely persisted on the backend to prevent accidental browser cache wipes).
-- **Authentication:** Custom HTTP-only Cookie Auth.
-- **Deployment:** Fully Dockerized.
+# Set a password before you start (this is the only thing protecting your dashboard)
+cp .env.example .env
+#   then edit .env and change APP_PASSWORD
 
-## 🚀 Installation & Deployment
+docker compose up -d
+```
 
-Life Control Center is designed to be hosted on your own infrastructure (Proxmox, Raspberry Pi, VPS).
+Open **http://localhost:3007**, log in with your password, and start forging. Your database is persisted to `./data/database.sqlite`.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ycianno/life-control-center.git
-   cd life-control-center
-   ```
+> `docker-compose.yml` reads `APP_PASSWORD` from your `.env` file. If you prefer, you can also set it directly in the compose file.
 
-2. **Configure your Environment:**
-   Edit the `docker-compose.yml` to set your application password (this secures the PWA from unauthorized access).
-   ```yaml
-   environment:
-     - PORT=3007
-     - APP_PASSWORD=YourSuperSecretPassword
-   ```
+### Without Docker
 
-3. **Deploy:**
-   ```bash
-   docker compose up -d
-   ```
+```bash
+npm install
+APP_PASSWORD=your-password npm start
+# → http://localhost:3007
+```
 
-4. **Public Exposure (Optional but Recommended):**
-   The application works flawlessly as a Progressive Web App (PWA) on iOS/Android. To access it outside your home network securely (without a VPN), we recommend using **Cloudflare Tunnels (Zero Trust)**.
+Requires Node.js 20+. `better-sqlite3` compiles a native module, so you'll need build tools (`python3`, `make`, `g++`) on first install.
 
-## 💾 Backups
-You can export your database directly from the UI using the **Export Backup** button, which generates a JSON file. For a raw database backup, securely copy the `database.sqlite` file out of the mounted `/data` volume.
+## Configuration
 
-## 📝 License
-Created for Personal Use and Accountability.
+| Variable | Default | Description |
+|---|---|---|
+| `APP_PASSWORD` | `changeme` | **Change this.** The password for the single user. |
+| `PORT` | `3007` | Port the server listens on. |
+| `DB_PATH` | `/app/data/database.sqlite` | Where the SQLite database lives. |
+| `SESSION_SECRET` | *(auto-generated)* | Secret used to sign the session cookie. A random one is generated and persisted on first run; set this only if you want to control it explicitly. |
+
+Web-push **VAPID keys are generated automatically** on first run and stored in the database — you don't need to configure them.
+
+## Backups
+
+- **From the UI:** Settings → Data → *Export Full Backup* writes a JSON snapshot you can re-import later.
+- **Raw database:** copy `data/database.sqlite` out of the mounted volume. The included [`backup.sh`](backup.sh) shows a simple scheduled-snapshot approach.
+
+## Security
+
+The Forge is a **single-user app with a single shared password** — it is intentionally simple, not a multi-tenant platform. Treat it accordingly:
+
+- **Always change `APP_PASSWORD`** before exposing it anywhere.
+- **Don't put it directly on the public internet.** Run it behind a reverse proxy with HTTPS, or — recommended — a zero-trust tunnel (e.g. Cloudflare Tunnel / Tailscale) so only you can reach it.
+- The session cookie is `httpOnly` and signed with a persisted random secret.
+
+## Tech stack
+
+- **Frontend:** Vanilla HTML/CSS/JS — no framework, no build step. Themed entirely with CSS custom properties.
+- **Backend:** Node.js + Express.
+- **Database:** SQLite via `better-sqlite3`.
+- **Auth:** Signed, `httpOnly` session cookie.
+- **Packaging:** Docker + Docker Compose.
+
+## Contributing
+
+Issues and PRs are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). The Forge is opinionated by design, so features that keep it simple and single-user are the easiest to land.
+
+## License
+
+[MIT](LICENSE) © 2026 YZEE Labs

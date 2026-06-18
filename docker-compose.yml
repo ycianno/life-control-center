@@ -1,7 +1,7 @@
 services:
-  life-control-center:
+  forge:
     build: .
-    container_name: life-control-center
+    container_name: forge
     ports:
       - "3007:3007"
     volumes:
@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     environment:
       - PORT=3007
-      # Set your own password before deploying (protects the dashboard).
-      - APP_PASSWORD=changeme
+      # Reads from a .env file in this directory (see .env.example).
+      # Change APP_PASSWORD before deploying — it protects the dashboard.
+      - APP_PASSWORD=${APP_PASSWORD:-changeme}
       - DB_PATH=/app/data/database.sqlite

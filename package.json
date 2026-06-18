@@ -1,7 +1,7 @@
 {
-  "name": "life-control-center",
+  "name": "the-forge",
   "version": "1.0.0",
-  "description": "Life Control Center with SQLite backend",
+  "description": "The Forge — a self-hosted, single-user habit tracker that turns your goals into an RPG (XP, levels, attributes, quests, streaks, weekly boss).",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

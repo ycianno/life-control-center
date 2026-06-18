@@ -416,10 +416,10 @@ const defaultMetrics = [
 function getMetrics() { return settings.metrics || defaultMetrics; }
 
 const defaultStudyAreas = [
-  "Certification",
-  "Skill Practice",
+  "Certification / Course",
+  "Language Learning",
   "Reading List",
-  "Language Learning"
+  "Skill Practice"
 ];
 function getStudyAreas() { return settings.studyAreas || defaultStudyAreas; }
 
@@ -1501,7 +1501,7 @@ async function resetThisWeek() {
 
 function copySummary() {
   const studyHours = [...document.querySelectorAll('[data-hours="study"]')].reduce((sum, el) => sum + Number(el.value || 0), 0);
-  const summary = `LIFE CONTROL CENTER WEEKLY SUMMARY\n\nWeek: ${document.getElementById("weekRangeText").textContent}\nMission: ${document.getElementById("mission").value}\nWeekly Completion: ${document.getElementById("scoreValue").textContent}\nCertification Study Hours: ${studyHours}/14\nProject Hours: ${document.getElementById("projectHours").value}/2 minimum, 3 bonus\nWeekly Grade: ${document.getElementById("grade").value}\n\nCurrent Project Focus:\n${document.getElementById("projectFocus").value}\n\nWins:\n${document.getElementById("wins").value}\n\nMissed Habits / Friction:\n${document.getElementById("misses").value}\n\nChanges for Next Week:\n${document.getElementById("changes").value}\n\nOne Thing I Refuse To Drop:\n${document.getElementById("refuseDrop").value}`;
+  const summary = `THE FORGE — WEEKLY SUMMARY\n\nWeek: ${document.getElementById("weekRangeText").textContent}\nMission: ${document.getElementById("mission").value}\nWeekly Completion: ${document.getElementById("scoreValue").textContent}\nCertification Study Hours: ${studyHours}/14\nProject Hours: ${document.getElementById("projectHours").value}/2 minimum, 3 bonus\nWeekly Grade: ${document.getElementById("grade").value}\n\nCurrent Project Focus:\n${document.getElementById("projectFocus").value}\n\nWins:\n${document.getElementById("wins").value}\n\nMissed Habits / Friction:\n${document.getElementById("misses").value}\n\nChanges for Next Week:\n${document.getElementById("changes").value}\n\nOne Thing I Refuse To Drop:\n${document.getElementById("refuseDrop").value}`;
   navigator.clipboard.writeText(summary).then(() => alert("Weekly summary copied."));
 }
 
