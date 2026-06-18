@@ -12,14 +12,15 @@ let editingDayIndex = null;
 // ===== THEMES =====
 const THEMES = [
   { id: 'true-black', name: 'True Black', preview: '#030305', gradient: 'linear-gradient(135deg, #38bdf8, #8b5cf6)' },
-  { id: 'crimson-night', name: 'Crimson Night', preview: '#120208', gradient: 'linear-gradient(135deg, #ec4899, #a855f7)' },
+  { id: 'crimson-night', name: 'Crimson', preview: '#14060a', gradient: 'linear-gradient(135deg, #ef4444, #f43f5e)' },
   { id: 'deep-forest', name: 'Deep Forest', preview: '#021a07', gradient: 'linear-gradient(135deg, #22c55e, #14b8a6)' },
   { id: 'warm-ember', name: 'Warm Ember', preview: '#1a0a02', gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)' },
   { id: 'royal-purple', name: 'Royal Purple', preview: '#0c0520', gradient: 'linear-gradient(135deg, #a78bfa, #e879f9)' },
-  { id: 'midnight', name: 'Midnight', preview: '#060c1a', gradient: 'linear-gradient(135deg, #38bdf8, #818cf8)' },
+  { id: 'midnight', name: 'Midnight', preview: '#050b1a', gradient: 'linear-gradient(135deg, #3b82f6, #22d3ee)' },
   { id: 'nord', name: 'Nord', preview: '#0e1320', gradient: 'linear-gradient(135deg, #88c0d0, #b48ead)' },
   { id: 'synthwave', name: 'Synthwave', preview: '#0d0418', gradient: 'linear-gradient(135deg, #ec4899, #22d3ee)' },
   { id: 'aurora', name: 'Aurora', preview: '#04140f', gradient: 'linear-gradient(135deg, #2dd4bf, #818cf8)' },
+  { id: 'carbon', name: 'Carbon', preview: '#0a0a0b', gradient: 'linear-gradient(135deg, #8a97a8, #5b6675)' },
 ];
 
 // ===== DEVICE DETECTION =====
