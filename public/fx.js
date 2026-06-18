@@ -232,5 +232,32 @@
   if (document.readyState !== "loading") wireToggle();
   else document.addEventListener("DOMContentLoaded", wireToggle);
 
-  window.FX = { levelUp, badge, dayCleared, xpPop, playCheck, setSfx, sfxOn };
+  function streakMilestone(days) {
+    arp([523.25, 659.25, 783.99, 1046.5], 80, "triangle", 0.17);
+    vibrate([0, 40, 60, 40, 90]);
+    const ov = document.createElement("div");
+    ov.className = "fx-overlay";
+    ov.innerHTML = `
+      <div class="fx-confetti"></div>
+      <div class="fx-card">
+        <span class="fx-card-k" style="color:#fb923c">STREAK</span>
+        <span class="fx-card-lv" style="background:linear-gradient(135deg,#fb923c,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${days} 🔥</span>
+        <span class="fx-card-rank">${days}-day streak!</span>
+      </div>`;
+    document.body.appendChild(ov);
+    const field = ov.querySelector(".fx-confetti");
+    for (let i = 0; i < 36; i++) {
+      const pc = document.createElement("span");
+      pc.className = "confetti-piece";
+      pc.style.left = Math.random() * 100 + "%";
+      pc.style.background = CONFETTI[i % CONFETTI.length];
+      pc.style.animationDelay = (Math.random() * 0.3).toFixed(2) + "s";
+      field.appendChild(pc);
+    }
+    requestAnimationFrame(() => ov.classList.add("show"));
+    setTimeout(() => ov.classList.remove("show"), 2400);
+    setTimeout(() => ov.remove(), 2900);
+  }
+
+  window.FX = { levelUp, badge, dayCleared, streakMilestone, xpPop, playCheck, setSfx, sfxOn };
 })();

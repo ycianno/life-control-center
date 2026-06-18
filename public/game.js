@@ -194,12 +194,13 @@
       };
     });
 
+    const ds = computeDayStreak();
     return {
       lifetimeXp, weeklyXp, activeWeeks,
       level: lv.level, xpIntoLevel: lv.xpIntoLevel, xpForNext: lv.xpForNext,
       rank, attrs,
       lifetimeStudyHours: Math.round(lifetimeStudyHours),
-      bestWeekPct, currentStreak: computeStreak(), dayStreak: computeDayStreak(),
+      bestWeekPct, currentStreak: computeStreak(), dayStreak: ds.streak, streakUsed: ds.used,
     };
   }
 
@@ -220,13 +221,19 @@
   }
   function computeDayStreak() {
     const thr = 50;
+    const grace = (typeof settings !== "undefined" && settings && settings.streakFreeze != null) ? settings.streakFreeze : 1;
     const today = new Date();
     let d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    let streak = 0;
+    let streak = 0, used = 0;
     if (dayCompletion(d) >= thr) streak++;        // today counts once it's met
     d.setDate(d.getDate() - 1);
-    while (dayCompletion(d) >= thr) { streak++; d.setDate(d.getDate() - 1); }
-    return streak;
+    while (true) {
+      if (dayCompletion(d) >= thr) { streak++; }
+      else if (used < grace) { used++; }          // a rest day / freeze bridges one gap
+      else break;
+      d.setDate(d.getDate() - 1);
+    }
+    return { streak: streak, used: used };
   }
 
   function computeStreak() {
@@ -301,7 +308,7 @@
     setText("lifetimeXp", p.lifetimeXp.toLocaleString());
     setText("weeklyXp", "+" + p.weeklyXp.toLocaleString());
     setText("weeksActive", p.activeWeeks);
-    setText("dayStreak", p.dayStreak);
+    setText("dayStreak", p.dayStreak + (p.streakUsed > 0 ? " 🛡️" : ""));
     setText("xpText", p.xpIntoLevel.toLocaleString() + " / " + p.xpForNext.toLocaleString() + " XP");
     setText("xpNextLabel", "to Level " + (p.level + 1));
 
@@ -332,6 +339,7 @@
     }
     lastLevel = p.level;
     checkBadgeUnlocks(p);
+    checkStreakMilestones(p);
   }
 
   // XP a single checkbox is worth (used by the FX layer for "+N XP" pops)
@@ -455,5 +463,27 @@
     }).join("");
   }
 
-  window.Game = { render, computeProfile, levelFromXp, xpForLevel, rankFor, checkXp, xpForCat, attrColorForCat, renderBadgeWall };
+  // ----- Day-streak milestones -----
+  const DAY_STREAK_MILESTONES = [7, 14, 30, 60, 100, 200, 365];
+  function checkStreakMilestones(p) {
+    if (typeof settings === "undefined" || !settings) return;
+    const first = !settings.seenStreaks;
+    const seen = settings.seenStreaks || [];
+    let changed = false;
+    DAY_STREAK_MILESTONES.forEach((m) => {
+      if (p.dayStreak >= m && seen.indexOf(m) === -1) {
+        seen.push(m); changed = true;
+        if (!first && window.FX && FX.streakMilestone) FX.streakMilestone(m);
+      }
+    });
+    if (changed || first) {
+      settings.seenStreaks = seen;
+      if (typeof persistSettings === "function") persistSettings();
+    }
+  }
+
+  // XP earned in a single week (for the trends view)
+  function weekXp(week) { return addWeekXp(week, {}); }
+
+  window.Game = { render, computeProfile, levelFromXp, xpForLevel, rankFor, checkXp, xpForCat, attrColorForCat, renderBadgeWall, weekXp, calcWeekScore: (w) => (typeof calculateWeekScoreData === "function" ? calculateWeekScoreData(w) : 0) };
 })();

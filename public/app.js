@@ -886,6 +886,7 @@ function openSettings() {
   document.getElementById("cfgStudyTarget").value = settings.studyTarget || 14;
   const dif = document.getElementById("cfgDifficulty"); if (dif) dif.value = String(settings.gameBase || 100);
   const sg = document.getElementById("cfgStreakGrade"); if (sg) sg.value = settings.streakGrade || 75;
+  const sf = document.getElementById("cfgStreakFreeze"); if (sf) sf.value = (settings.streakFreeze != null ? settings.streakFreeze : 1);
   const cs = document.getElementById("cfgCallsign"); if (cs) cs.value = settings.callsign || "";
   renderSectionToggles();
   const rem = getReminders();
@@ -899,6 +900,71 @@ function openSettings() {
 }
 
 // ===== EVENT BINDING =====
+// ===== ANALYTICS / TRENDS =====
+function trBarBlock(title, items, max) {
+  const m = max || 1;
+  const bars = items.map((it) => {
+    const h = Math.max(2, Math.round((it.value / m) * 100));
+    let cls = "gx";
+    if (it.grade) cls = it.value >= 85 ? "g3" : it.value >= 75 ? "g2" : it.value >= 50 ? "g1" : it.value > 0 ? "g0" : "gz";
+    return `<div class="tr-bar" title="${escapeHtml(String(it.label))}: ${escapeHtml(String(it.raw))}"><div class="tr-bar-fill ${cls}" style="height:${h}%"></div><span class="tr-bar-lbl">${escapeHtml(String(it.label))}</span></div>`;
+  }).join("");
+  return `<div class="tr-block"><div class="tr-title">${title}</div><div class="tr-chart">${bars}</div></div>`;
+}
+function renderTrends() {
+  const el = document.getElementById("reportContent");
+  if (!el) return;
+  const weeks = database.weeks || {};
+  const calc = (w) => (window.Game && Game.calcWeekScore) ? Game.calcWeekScore(w) : calculateWeekScoreData(w);
+  const wxp = (w) => (window.Game && Game.weekXp) ? Game.weekXp(w) : 0;
+  const prof = (window.Game && Game.computeProfile) ? Game.computeProfile() : null;
+
+  const cur = getStartOfWeek(new Date());
+  const last12 = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = addDays(cur, -i * 7); const w = weeks[iso(d)];
+    last12.push({ date: d, score: w ? calc(w) : 0, xp: w ? wxp(w) : 0 });
+  }
+
+  const blueprint = getDailyBlueprint();
+  const names = Object.keys(blueprint);
+  const wdSum = [0, 0, 0, 0, 0, 0, 0], wdN = [0, 0, 0, 0, 0, 0, 0];
+  const taskStat = {};
+  Object.values(weeks).forEach((w) => {
+    if (!w || !w.checks) return;
+    for (let i = 0; i < 7; i++) {
+      const tasks = blueprint[names[i]] || [];
+      if (!tasks.length) continue;
+      let done = 0;
+      tasks.forEach((t) => {
+        const c = !!w.checks[taskId(i, t)];
+        const st = taskStat[t] || (taskStat[t] = { done: 0, seen: 0 });
+        st.seen++; if (c) { st.done++; done++; }
+      });
+      wdSum[i] += Math.round(done / tasks.length * 100); wdN[i]++;
+    }
+  });
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekday = wdSum.map((s, i) => wdN[i] ? Math.round(s / wdN[i]) : 0);
+  const skipped = Object.entries(taskStat).map(([name, st]) => ({ name, rate: Math.round(st.done / st.seen * 100) }))
+    .filter((x) => taskStat[x.name].seen >= 2).sort((a, b) => a.rate - b.rate).slice(0, 5);
+
+  let html = "";
+  if (prof) {
+    const stats = [["Level", prof.level], ["Lifetime XP", prof.lifetimeXp.toLocaleString()], ["Best week", prof.bestWeekPct + "%"], ["Day streak", prof.dayStreak], ["Active wks", prof.activeWeeks]];
+    html += `<div class="tr-stats">${stats.map(([k, v]) => `<div class="tr-stat"><span class="tr-stat-v">${v}</span><span class="tr-stat-k">${k}</span></div>`).join("")}</div>`;
+  }
+  html += trBarBlock("Weekly completion · last 12 weeks", last12.map((w) => ({ label: fmt(w.date), value: w.score, raw: w.score + "%", grade: true })), 100);
+  html += trBarBlock("XP earned · last 12 weeks", last12.map((w) => ({ label: fmt(w.date), value: w.xp, raw: String(w.xp) })), Math.max(1, ...last12.map((w) => w.xp)));
+  html += trBarBlock("Completion by weekday", weekday.map((v, i) => ({ label: DOW[i], value: v, raw: v + "%", grade: true })), 100);
+  if (skipped.length) {
+    html += `<div class="tr-block"><div class="tr-title">Most skipped quests</div>` +
+      skipped.map((s) => `<div class="tr-skip"><span class="tr-skip-name">${escapeHtml(s.name)}</span><span class="tr-skip-bar"><span class="tr-skip-fill" style="width:${s.rate}%"></span></span><span class="tr-skip-rate">${s.rate}%</span></div>`).join("") +
+      `</div>`;
+  }
+  el.innerHTML = html;
+}
+
 function bindEvents() {
   document.addEventListener("input", e => { if (e.target.matches("[data-save]")) { saveWeekField(e.target); updateProgress(); } });
   // Certification target dates (stored in settings.certDates, not week fields)
@@ -970,6 +1036,7 @@ function bindEvents() {
       settings.studyTarget = Number(document.getElementById("cfgStudyTarget").value);
       const dif = document.getElementById("cfgDifficulty"); if (dif) settings.gameBase = Number(dif.value) || 100;
       const sg = document.getElementById("cfgStreakGrade"); if (sg) settings.streakGrade = Math.min(100, Math.max(1, Number(sg.value) || 75));
+      const sf = document.getElementById("cfgStreakFreeze"); if (sf) settings.streakFreeze = Math.min(3, Math.max(0, Number(sf.value) || 0));
       const cs = document.getElementById("cfgCallsign"); if (cs && cs.value.trim()) settings.callsign = cs.value.trim();
       settings.hiddenSections = [...document.querySelectorAll('#sectionToggles input[data-section]')].filter(c => !c.checked).map(c => c.dataset.section);
       const reEnable = document.getElementById("cfgRemindEnable");
@@ -1152,8 +1219,8 @@ function bindEvents() {
   // Reports Modal
   const openReportBtn = document.getElementById("openReportBtn");
   if (openReportBtn) openReportBtn.onclick = () => {
-    document.getElementById("reportContent").textContent = "Select an option above to generate a report.";
     document.getElementById("reportsModal").classList.add("active");
+    renderTrends();
   };
   const closeReportBtn = document.getElementById("closeReportBtn");
   if (closeReportBtn) closeReportBtn.onclick = () => document.getElementById("reportsModal").classList.remove("active");
@@ -1213,6 +1280,8 @@ function bindEvents() {
     document.getElementById("reportContent").innerHTML = html;
   };
   
+  const genTrends = document.getElementById("genTrendsBtn");
+  if (genTrends) genTrends.onclick = renderTrends;
   const genMonth = document.getElementById("genMonthReportBtn");
   if (genMonth) genMonth.onclick = () => genReport(4);
   const genYear = document.getElementById("genYearReportBtn");

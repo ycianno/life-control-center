@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#040406" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=18" />
+  <link rel="stylesheet" href="style.css?v=19" />
 </head>
 <body>
   <main class="shell">
@@ -284,6 +284,10 @@
             <div class="set-row-text"><span class="set-row-label">Streak passing grade</span><span class="set-row-hint">% completion to keep your streak</span></div>
             <input type="number" id="cfgStreakGrade" value="75" min="1" max="100">
           </div>
+          <div class="set-row">
+            <div class="set-row-text"><span class="set-row-label">Streak rest days</span><span class="set-row-hint">Missed days your day-streak forgives 🛡️</span></div>
+            <input type="number" id="cfgStreakFreeze" value="1" min="0" max="3">
+          </div>
         </div>
 
         <!-- Profile Tab -->
@@ -448,8 +452,9 @@
       <div class="modal glass" role="dialog" aria-modal="true" style="max-width: 600px;">
         <h3>Performance Report</h3>
         <div style="display:flex;gap:8px;margin-top:12px;margin-bottom:24px;">
-          <button id="genMonthReportBtn" class="primary">Past 4 Weeks</button>
-          <button id="genYearReportBtn" class="primary">Past 52 Weeks</button>
+          <button id="genTrendsBtn" class="primary">📈 Trends</button>
+          <button id="genMonthReportBtn">Past 4 Weeks</button>
+          <button id="genYearReportBtn">Past 52 Weeks</button>
         </div>
         <div id="reportContent"><div class="report-empty">Select an option above to generate a report.</div></div>
         <div class="modal-actions">
@@ -463,8 +468,8 @@
     <p class="footer-note">Data is saved on your server by week using a versioned SQLite database. Use Export Backup before major changes.</p>
   </main>
 
-  <script src="game.js?v=8"></script>
-  <script src="fx.js?v=4"></script>
-  <script src="app.js?v=16"></script>
+  <script src="game.js?v=9"></script>
+  <script src="fx.js?v=5"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>

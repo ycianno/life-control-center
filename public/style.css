@@ -2101,3 +2101,26 @@ input[type="file"] { display: none; }
 .cert-cd.cd-over { color: #fff; background: rgba(239,68,68,0.55); }
 
 input[type="time"], input[type="date"] { color-scheme: dark; }
+
+/* ===== TRENDS / ANALYTICS ===== */
+.tr-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 18px; }
+.tr-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); }
+.tr-stat-v { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 18px; }
+.tr-stat-k { font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.tr-block { margin-bottom: 20px; }
+.tr-title { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.tr-chart { display: flex; align-items: flex-end; gap: 4px; height: 110px; }
+.tr-bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+.tr-bar-fill { width: 62%; max-width: 22px; border-radius: 4px 4px 0 0; min-height: 2px; transition: height 0.4s ease; }
+.tr-bar-lbl { font-size: 8px; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; max-width: 100%; }
+.tr-bar-fill.g3 { background: #22c55e; }
+.tr-bar-fill.g2 { background: #4ade80; }
+.tr-bar-fill.g1 { background: #f59e0b; }
+.tr-bar-fill.g0 { background: #ef4444; }
+.tr-bar-fill.gz { background: rgba(255,255,255,0.08); }
+.tr-bar-fill.gx { background: var(--accent-primary); }
+.tr-skip { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.tr-skip-name { flex: 0 0 42%; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tr-skip-bar { flex: 1; height: 7px; border-radius: 99px; background: rgba(0,0,0,0.4); overflow: hidden; }
+.tr-skip-fill { display: block; height: 100%; background: var(--accent-primary); border-radius: 99px; }
+.tr-skip-rate { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 12px; color: var(--muted); min-width: 34px; text-align: right; }
