@@ -95,7 +95,28 @@ APP_PASSWORD=your-password npm start
 # → http://localhost:3007
 ```
 
-Requires Node.js 20+. `better-sqlite3` compiles a native module, so you'll need build tools (`python3`, `make`, `g++`) on first install.
+Requires Node.js 20+. `better-sqlite3` compiles a native module, so you'll need build tools (`python3`, `make`, `g++`) on first install. This is the exact same server the Docker image runs — Docker just wraps `npm start`. Use whichever you prefer; there's nothing extra to maintain for both.
+
+**Keep it running (Linux, systemd).** Docker restarts the app automatically; for a bare-metal install, a small service unit does the same. Create `/etc/systemd/system/the-forge.service`:
+
+```ini
+[Unit]
+Description=The Forge
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/the-forge
+ExecStart=/usr/bin/node server.js
+Environment=APP_PASSWORD=your-password
+Environment=PORT=3007
+Restart=always
+User=forge
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then `sudo systemctl enable --now the-forge`. (On macOS, `pm2 start server.js --name the-forge` is the easy equivalent.)
 
 ## Configuration
 
@@ -113,13 +134,32 @@ Web-push **VAPID keys are generated automatically** on first run and stored in t
 - **From the UI:** Settings → Data → *Export Full Backup* writes a JSON snapshot you can re-import later.
 - **Raw database:** copy `data/database.sqlite` out of the mounted volume. The included [`backup.sh`](backup.sh) shows a simple scheduled-snapshot approach.
 
+## Accessing it from your phone / outside home
+
+By default The Forge is reachable on your home network at `http://<server-ip>:3007`, and you can **Add to Home Screen** on your phone to install it as an app (it's a PWA — works offline, supports push). To reach it from anywhere, pick one — easiest first:
+
+| Option | Domain? | Effort | Notes |
+|---|---|---|---|
+| **Same Wi-Fi** | No | none | `http://<server-ip>:3007` at home. Good enough for many. |
+| **Tailscale** ⭐ | No | ~5 min | Private VPN mesh. Reach it from your phone anywhere, encrypted, **nothing exposed to the internet**. Free, with iOS/Android apps. Best mobile-from-anywhere option. |
+| **Cloudflare Tunnel** | Yes | ~20–30 min | A real `https://forge.yourdomain.com` URL with no port-forwarding, plus an optional login gate (Cloudflare Access). Free tier covers it. Best "clean URL" option. |
+| **Reverse proxy + port-forward** | Yes | more | Classic self-host: [Caddy](https://caddyserver.com) (auto-HTTPS) or Nginx + a DNS record + a forwarded port. Most control, most exposure. |
+
+**Tailscale** and **Cloudflare Tunnel** are recommended because they give you remote access *without* opening your home network to the public internet.
+
 ## Security
 
-The Forge is a **single-user app with a single shared password** — it is intentionally simple, not a multi-tenant platform. Treat it accordingly:
+The Forge is a **single-user app with a single shared password** — intentionally simple, not a multi-tenant platform. It ships with sensible defaults:
+
+- A signed, `httpOnly` session cookie (secret auto-generated and persisted).
+- **Brute-force protection:** the login endpoint is rate-limited (lockout after repeated failures).
+- **Security headers** including a strict Content-Security-Policy (all assets, fonts included, are served locally — no external calls).
+- An in-app warning if you're still running the default password.
+
+Still, treat it like what it is:
 
 - **Always change `APP_PASSWORD`** before exposing it anywhere.
-- **Don't put it directly on the public internet.** Run it behind a reverse proxy with HTTPS, or — recommended — a zero-trust tunnel (e.g. Cloudflare Tunnel / Tailscale) so only you can reach it.
-- The session cookie is `httpOnly` and signed with a persisted random secret.
+- **Don't put it directly on the public internet without protection.** Use HTTPS via a reverse proxy, or — recommended — a zero-trust tunnel / VPN (Cloudflare Tunnel, Tailscale) so only you can reach it. See [Accessing it](#accessing-it-from-your-phone--outside-home) above and [SECURITY.md](SECURITY.md).
 
 ## Tech stack
 
