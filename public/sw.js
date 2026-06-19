@@ -1,9 +1,9 @@
-/* Life Control Center — service worker
+/* The Forge — service worker
  * Cache-first for static assets, network-first for navigations (so auth
  * redirects are respected), offline shell fallback. API is never cached —
  * app.js already falls back to localStorage when offline.
  */
-const CACHE = 'lcc-v5';
+const CACHE = 'forge-v6';
 const SHELL = '/index.html';
 
 self.addEventListener('install', () => self.skipWaiting());

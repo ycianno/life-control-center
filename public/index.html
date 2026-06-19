@@ -7,6 +7,7 @@
   <meta name="description" content="A private, self-hosted control center for discipline, training, certification progress, project execution, and weekly review." />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#040406" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
   <link rel="stylesheet" href="style.css?v=22" />
 </head>
@@ -138,6 +139,7 @@
           <button id="nextWeekBtn">Next<svg viewBox="0 0 24 24" class="ic"><path d="M9 18l6-6-6-6"/></svg></button>
           <span class="week-range-tag"><span id="weekRangeText">—</span> · <span id="todayText">—</span></span>
           <button id="copyBtn">Copy Summary</button>
+          <button id="shareCardBtn"><svg viewBox="0 0 24 24" class="ic"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share Card</button>
         </div>
 
         <div class="hero-heatmap">
@@ -330,6 +332,7 @@
             <button id="settingsExportBtn"><svg viewBox="0 0 24 24" class="ic"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export Full Backup</button>
             <label class="file-label" for="settingsImportFile"><svg viewBox="0 0 24 24" class="ic"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Import Backup</label>
             <input id="settingsImportFile" type="file" accept="application/json,.json" />
+            <button id="loadSampleBtn"><svg viewBox="0 0 24 24" class="ic"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5L19 19M19 5l-2.5 2.5M7.5 16.5L5 19"/></svg>Load Sample Data</button>
             <button class="danger" id="settingsResetBtn"><svg viewBox="0 0 24 24" class="ic"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Reset This Week</button>
           </div>
         </div>
@@ -509,8 +512,9 @@
     <p class="footer-note">Data is saved on your server by week using a versioned SQLite database. Use Export Backup before major changes.</p>
   </main>
 
-  <script src="game.js?v=10"></script>
+  <script src="game.js?v=11"></script>
   <script src="fx.js?v=7"></script>
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
+  <script src="extras.js?v=1"></script>
 </body>
 </html>

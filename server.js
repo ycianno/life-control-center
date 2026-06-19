@@ -69,12 +69,61 @@ webpush.setVapidDetails('mailto:forge@example.com', VAPID.publicKey, VAPID.priva
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser(SESSION_SECRET));
 
-app.post('/api/login', (req, res) => {
+// Security headers (no external deps). style-src keeps 'unsafe-inline' because the
+// UI relies on inline style attributes; scripts are all same-origin files.
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-XSS-Protection', '0');
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob:",
+    "connect-src 'self'",
+    "manifest-src 'self'",
+    "worker-src 'self'",
+    "font-src 'self' https://fonts.gstatic.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'"
+  ].join('; '));
+  next();
+});
+
+// Unauthenticated liveness probe (Docker HEALTHCHECK / orchestrators).
+app.get('/healthz', (req, res) => res.json({ status: 'ok' }));
+
+// --- Brute-force protection for /api/login (in-memory, per source IP) ---
+const LOGIN_MAX_ATTEMPTS = 8;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const loginAttempts = new Map(); // ip -> { count, first }
+const clientIp = (req) => req.socket.remoteAddress || 'unknown';
+function loginLimiter(req, res, next) {
+  const ip = clientIp(req);
+  const now = Date.now();
+  const rec = loginAttempts.get(ip);
+  if (rec && now - rec.first > LOGIN_WINDOW_MS) loginAttempts.delete(ip);
+  const cur = loginAttempts.get(ip);
+  if (cur && cur.count >= LOGIN_MAX_ATTEMPTS) {
+    const retry = Math.ceil((LOGIN_WINDOW_MS - (now - cur.first)) / 1000);
+    res.setHeader('Retry-After', String(retry));
+    return res.status(429).json({ success: false, message: `Too many attempts. Try again in ${Math.ceil(retry / 60)} min.` });
+  }
+  next();
+}
+
+app.post('/api/login', loginLimiter, (req, res) => {
   const { password } = req.body;
   if (password === APP_PASSWORD) {
+    loginAttempts.delete(clientIp(req));
     res.cookie('auth_token', 'ok', { signed: true, httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 30 }); // 30 days, signed
     res.json({ success: true });
   } else {
+    const ip = clientIp(req);
+    const rec = loginAttempts.get(ip);
+    if (rec) rec.count++; else loginAttempts.set(ip, { count: 1, first: Date.now() });
     res.status(401).json({ success: false, message: 'Invalid password' });
   }
 });
@@ -135,6 +184,11 @@ app.post('/api/settings', (req, res) => {
   res.json({ success: true, changes: info.changes });
 });
 
+// Runtime hints for the UI (authenticated). Used to nag about the default password.
+app.get('/api/config', (req, res) => {
+  res.json({ defaultPassword: APP_PASSWORD === 'changeme' });
+});
+
 // Achievement endpoints
 app.get('/api/achievements', (req, res) => {
   const rows = db.prepare('SELECT * FROM achievements ORDER BY completed_at DESC').all();
@@ -173,5 +227,5 @@ app.post('/api/push/unsubscribe', (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Life Control Center running at http://0.0.0.0:${port}`);
+  console.log(`The Forge running at http://0.0.0.0:${port}`);
 });

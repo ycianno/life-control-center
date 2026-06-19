@@ -39,6 +39,7 @@ It's opinionated and built for one person: you. Self-host it, set a password, an
 | 📅 **Goal tracking** | Certifications & study goals with deadline countdowns and pacing, weekly project-output tracking, diet/protein checklists, and a structured weekly review. |
 | 🎨 **10 themes** | A full palette of distinct dark themes (True Black, Crimson, Deep Forest, Synthwave, Nord, Carbon, and more). |
 | 📱 **PWA + push** | Installable on iOS/Android, works offline, and supports optional web-push reminders. |
+| 🪪 **Shareable card** | Export your level, rank, and attributes as a PNG to share — and load **sample data** in one click so a fresh install looks alive. |
 | 🤖 **Optional Discord agent** | "Hermes" — a local-AI companion (via [Ollama](https://ollama.com)) that reads your progress and nudges you on Discord. See [`agent/`](agent/). |
 
 > Everything (goals, quests, diet, projects, review prompts, difficulty) is editable in-app — no code changes required.
@@ -49,6 +50,8 @@ It's opinionated and built for one person: you. Self-host it, set a password, an
   <img src="docs/screenshots/character.png" width="80%" alt="Character screen with level orb, attribute radar, and contribution heatmap" />
   <br/><br/>
   <img src="docs/screenshots/themes.png" width="80%" alt="A selection of the built-in themes" />
+  <br/><br/>
+  <img src="docs/screenshots/card.png" width="60%" alt="A shareable character card with level, rank, and attributes" />
 </div>
 
 ## Quick start (Docker)
@@ -66,9 +69,23 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Open **http://localhost:3007**, log in with your password, and start forging. Your database is persisted to `./data/database.sqlite`.
+Open **http://localhost:3007**, log in with your password, and start forging. Your database is persisted to `./data/database.sqlite`. On first launch you can **load sample data** to see a populated dashboard, or start fresh.
 
 > `docker-compose.yml` reads `APP_PASSWORD` from your `.env` file. If you prefer, you can also set it directly in the compose file.
+
+### Fastest: prebuilt image (no build)
+
+A multi-arch image (amd64 + arm64, so it runs on a Raspberry Pi too) is published to GitHub Container Registry:
+
+```bash
+docker run -d --name forge \
+  -p 3007:3007 \
+  -e APP_PASSWORD=your-password \
+  -v "$PWD/data:/app/data" \
+  ghcr.io/ycianno/the-forge:latest
+```
+
+Or in `docker-compose.yml`, comment out `build: .` and uncomment the `image:` line.
 
 ### Without Docker
 

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login · Life Control Center</title>
+  <title>Login · The Forge</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
   <link rel="stylesheet" href="style.css" />
   <style>
     body { display: grid; place-items: center; }
@@ -16,7 +17,7 @@
 </head>
 <body>
   <div class="login-box glass">
-    <div class="brand" style="justify-content: center; margin-bottom: 16px;"><span class="orb"></span><span>Life Control Center</span></div>
+    <div class="brand" style="justify-content: center; margin-bottom: 16px;"><span class="orb"></span><span>The Forge</span></div>
     <h1>Authentication</h1>
     <form id="loginForm">
       <input type="password" id="password" placeholder="Enter password" required autofocus>
@@ -25,23 +26,6 @@
     </form>
   </div>
 
-  <script>
-    document.getElementById('loginForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const password = document.getElementById('password').value;
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      });
-      const data = await res.json();
-      if (data.success) {
-        window.location.href = '/';
-      } else {
-        document.getElementById('errorMsg').style.display = 'block';
-        document.getElementById('password').value = '';
-      }
-    };
-  </script>
+  <script src="login.js"></script>
 </body>
 </html>

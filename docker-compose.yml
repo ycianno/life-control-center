@@ -1,12 +1,15 @@
 services:
   forge:
+    # Option A (default): build from source in this repo.
     build: .
+    # Option B: skip the build and use the prebuilt multi-arch image instead —
+    # comment out "build: ." above and uncomment the line below.
+    # image: ghcr.io/ycianno/the-forge:latest
     container_name: forge
     ports:
       - "3007:3007"
     volumes:
       - ./data:/app/data
-      - ./public:/app/public
     restart: unless-stopped
     environment:
       - PORT=3007
