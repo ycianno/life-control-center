@@ -29,10 +29,10 @@ It's opinionated and built for one person: you. Self-host it, set a password, an
 
 | | |
 |---|---|
-| 🎮 **Game engine** | Lifetime XP, leveling curve, Bronze→Master ranks, and 5 independently-leveling attributes (Discipline, Body, Mind, Vitality, Craft) — all derived from the checks you already make. |
+| 🎮 **Game engine** | Lifetime XP, leveling curve, Initiate→Forgemaster ranks, and 5 independently-leveling attributes (Discipline, Body, Mind, Vitality, Craft) — all derived from the checks you already make. |
 | ✅ **Daily quests** | A per-day checklist where each task awards XP. Combos, haptics, and a "Day Cleared" celebration when you finish the day. |
 | 🔥 **Streaks & freeze** | Daily and weekly streaks with milestone rewards (7 / 30 / 100 / 365 days) and a configurable "freeze" grace day so one bad day doesn't reset everything. |
-| 🏆 **Badges & trophies** | Auto-unlocking achievement badges across four rarities, plus a manual trophy case for real-world wins (certifications, PRs, goals). |
+| 🏆 **Trophy Cabinet** | A dedicated showcase: trophy grades, a filterable wall of auto-unlocking **insignias** (Ascension, Attributes, Consistency, Boss, Study, Volume) across rarities, and manually-logged **Records** for real-world wins (certifications, PRs, goals). |
 | 👹 **Weekly boss** | A deterministic boss each week whose HP drains as you complete your week — with double damage to its weak attribute. Defeat it for a badge and a victory celebration. |
 | ⏱️ **Focus timer** | A built-in Pomodoro/focus timer that logs elapsed hours straight into your study/project goals. |
 | 📊 **Analytics** | Weekly completion & XP trends, by-weekday breakdowns, and your most-skipped quests. |
@@ -52,6 +52,8 @@ It's opinionated and built for one person: you. Self-host it, set a password, an
   <img src="docs/screenshots/themes.png" width="80%" alt="A selection of the built-in themes" />
   <br/><br/>
   <img src="docs/screenshots/card.png" width="60%" alt="A shareable character card with level, rank, and attributes" />
+  <br/><br/>
+  <img src="docs/screenshots/cabinet.png" width="45%" alt="The trophy Cabinet with insignias and records" />
 </div>
 
 ## Install
