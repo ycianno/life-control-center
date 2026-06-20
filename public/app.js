@@ -8,6 +8,7 @@ let settings = { version: 3, dayTemplates: null };
 let achievements = [];
 let saveTimer = null;
 let editingDayIndex = null;
+let booting = true;   // suppresses persistence during the instant cache-paint at startup
 
 // ===== THEMES =====
 const THEMES = [
@@ -101,7 +102,19 @@ async function loadAchievements() {
   }
 }
 
+// Last-known state mirrored to localStorage so a reload paints instantly (no empty flash).
+function readCache(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+}
+function cacheState() {
+  try {
+    localStorage.setItem(APP_DB_KEY, JSON.stringify(database));
+    localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (e) {}
+}
+
 async function persistDatabase() {
+  if (booting) return;
   const key = weekKey();
   const weekData = database.weeks[key];
   if (!weekData) return;
@@ -122,6 +135,7 @@ async function persistDatabase() {
 }
 
 async function persistSettings() {
+  if (booting) return;
   try {
     await fetch('/api/settings', {
       method: 'POST',
@@ -290,7 +304,6 @@ function renderStatic() {
   renderDiet();
   renderProjectChecks();
   renderReview();
-  bindEvents();
 }
 
 function calculateWeekScoreData(weekData) {
@@ -1583,16 +1596,26 @@ function structuredCloneSafe(obj) { return JSON.parse(JSON.stringify(obj)); }
 
 // ===== INIT =====
 async function init() {
-  await loadDatabase();
-  await loadSettings();
-  await loadAchievements();
-  await migrateLegacyIfNeeded();
-  
-  // Apply saved theme
-  if (settings.theme) {
-    applyTheme(settings.theme);
+  bindEvents();  // event delegation + button handlers — once, up front
+
+  // Instant paint from the last-known cache so a reload never flashes the empty shell.
+  // Writes stay suppressed (booting) so this can't clobber fresher server state.
+  const cachedDb = readCache(APP_DB_KEY);
+  const cachedSettings = readCache(APP_SETTINGS_KEY);
+  if (cachedDb && cachedDb.weeks && cachedSettings) {
+    database = cachedDb;
+    settings = cachedSettings;
+    if (settings.theme) applyTheme(settings.theme);
+    renderStatic();
+    applyWeekToUI();
   }
-  
+
+  // Revalidate from the server in parallel (one round-trip, not three), then reconcile.
+  await Promise.all([loadDatabase(), loadSettings(), loadAchievements()]);
+  await migrateLegacyIfNeeded();
+  booting = false;
+  cacheState();
+  if (settings.theme) applyTheme(settings.theme);
   renderStatic();
   applyWeekToUI();
 }
