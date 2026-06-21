@@ -995,46 +995,64 @@ tr:hover td { background: rgba(255,255,255,0.04); }
 .more-drawer.active {
   display: block;
   position: fixed;
-  bottom: 72px;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   left: 8px;
   right: 8px;
   z-index: 999;
-  padding: 16px;
-  border-radius: 20px;
-  background: rgba(10, 10, 14, 0.98);
+  padding: 14px 14px 16px;
+  border-radius: 24px;
+  background: rgba(12, 12, 17, 0.96);
   border: 1px solid var(--line-strong);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 -12px 48px rgba(0,0,0,0.6);
   animation: slideUp 0.25s ease-out;
+}
+.more-drawer.active::before {
+  content: "";
+  display: block;
+  width: 38px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--line-strong);
+  margin: 0 auto 14px;
 }
 .more-drawer .more-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 .more-drawer .more-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
+  justify-content: center;
+  gap: 8px;
+  min-height: 76px;
+  padding: 12px 6px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--line);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease;
   text-decoration: none;
   color: var(--text);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   text-align: center;
 }
+.more-drawer .more-item:active { transform: scale(0.94); }
 .more-drawer .more-item:hover {
   background: rgba(255,255,255,0.08);
+  border-color: var(--line-strong);
 }
+/* Destructive actions read as such. */
+.more-drawer .more-item#moreResetBtn,
+.more-drawer a.more-item[href="/api/logout"] { color: var(--danger-text, #f87171); }
 .more-drawer .more-icon {
-  font-size: 20px;
+  font-size: 23px;
+  line-height: 1;
 }
 
 @keyframes slideUp {
@@ -1837,11 +1855,42 @@ input[type="file"] { display: none; }
   pointer-events: none;
   transition: --xp-deg 0.6s ease;
 }
-.lvl-orb { animation: orb-glow 3.8s ease-in-out infinite; }
+.lvl-orb { animation: orb-glow 3.8s ease-in-out infinite; isolation: isolate; }
 @keyframes orb-glow {
   0%, 100% { box-shadow: 0 0 34px var(--score-glow), inset 0 3px 12px rgba(0,0,0,0.65); }
   50%      { box-shadow: 0 0 56px var(--score-glow), inset 0 3px 12px rgba(0,0,0,0.65); }
 }
+
+/* --- Rank-tiered orb frame + Legendary Aura ---------------------------------
+   The aura is a masked conic halo that bleeds out around the orb; its richness
+   escalates with the Forge rank ladder (Initiate → Forgemaster). Center stays
+   transparent so the orb face always shows through. */
+.lvl-aura {
+  position: absolute; inset: -16px; border-radius: 50%;
+  pointer-events: none; z-index: -1; opacity: 0;
+  background: conic-gradient(from 0deg,
+    var(--accent-primary), transparent 25%,
+    var(--accent-primary) 50%, transparent 75%, var(--accent-primary));
+  -webkit-mask: radial-gradient(farthest-side, transparent 56%, #000 72%);
+          mask: radial-gradient(farthest-side, transparent 56%, #000 72%);
+  filter: blur(2px);
+  transition: opacity 0.6s ease;
+}
+.char-screen[data-rank="apprentice"]  .lvl-aura { opacity: 0.22; }
+.char-screen[data-rank="journeyman"]  .lvl-aura { opacity: 0.32; }
+.char-screen[data-rank="artisan"]     .lvl-aura { opacity: 0.45; }
+.char-screen[data-rank="master"]      .lvl-aura { opacity: 0.62; filter: blur(3px); }
+.char-screen[data-rank="forgemaster"] .lvl-aura { opacity: 0.92; filter: blur(3px); }
+/* Forgemaster gets a second, slower counter-rotating ring for depth */
+.char-screen[data-rank="forgemaster"] .lvl-orb { box-shadow: 0 0 46px var(--score-glow), 0 0 12px var(--accent-primary), inset 0 3px 12px rgba(0,0,0,0.65); }
+.char-screen[data-rank="master"]      .lvl-orb { box-shadow: 0 0 42px var(--score-glow), inset 0 3px 12px rgba(0,0,0,0.65); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .char-screen[data-rank="artisan"]     .lvl-aura { animation: aura-spin 14s linear infinite; }
+  .char-screen[data-rank="master"]      .lvl-aura { animation: aura-spin 10s linear infinite; }
+  .char-screen[data-rank="forgemaster"] .lvl-aura { animation: aura-spin 7s  linear infinite; }
+}
+@keyframes aura-spin { to { transform: rotate(360deg); } }
 
 /* weekly chip relocated into the hero */
 .week-chip {
@@ -1866,6 +1915,49 @@ input[type="file"] { display: none; }
 .mission-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .mission-body input { background: transparent; border: none; padding: 0; font-size: 16px; font-weight: 700; color: var(--text); box-shadow: none; }
 .mission-body input:focus { box-shadow: none; }
+
+/* --- Hero Class chip (Soul Evolution) --- */
+.class-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px 3px 7px; border-radius: 99px;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.01em;
+  color: var(--cc, var(--accent-primary));
+  background: color-mix(in srgb, var(--cc, var(--accent-primary)) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cc, var(--accent-primary)) 45%, transparent);
+  box-shadow: 0 0 14px -6px var(--cc, var(--accent-primary));
+}
+.class-chip:empty { display: none; }
+.class-chip .ic { width: 14px; height: 14px; filter: drop-shadow(0 0 4px var(--cc, var(--accent-primary))); }
+.class-chip-name { line-height: 1; }
+
+/* --- Daily Missions card --- */
+.daily-missions {
+  border-radius: 18px; padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-secondary, #34d399);
+}
+.daily-missions:empty { display: none; }
+.daily-missions.all-done { border-left-color: #34d399; box-shadow: inset 0 0 0 1px color-mix(in srgb, #34d399 18%, transparent); }
+.dm-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.dm-title { font-size: 12px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.dm-count { font-size: 12px; font-weight: 800; color: var(--text-dim); }
+.daily-missions.all-done .dm-count { color: #34d399; }
+.dm-list { display: flex; flex-direction: column; gap: 6px; }
+.dm-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 12px;
+  background: rgba(255,255,255,0.02); border: 1px solid var(--line);
+  transition: background 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+}
+.dm-ic { display: grid; place-items: center; width: 22px; height: 22px; color: var(--muted-2); flex-shrink: 0; }
+.dm-ic .ic { width: 18px; height: 18px; }
+.dm-label { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: var(--text); }
+.dm-xp { font-size: 12px; font-weight: 800; color: var(--muted); flex-shrink: 0; }
+.dm-row.done { border-color: color-mix(in srgb, #34d399 40%, transparent); background: color-mix(in srgb, #34d399 9%, transparent); }
+.dm-row.done .dm-ic { color: #34d399; filter: drop-shadow(0 0 5px #34d399); }
+.dm-row.done .dm-label { color: var(--text-dim); }
+.dm-row.done .dm-xp { color: #34d399; }
 
 /* week-nav chevrons */
 .char-actions button { gap: 5px; }
@@ -2024,6 +2116,23 @@ input[type="file"] { display: none; }
 .badge-tile.locked .badge-name { color: var(--muted-2); }
 .badge-req { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.3; }
 .badge-tile.unlocked .badge-req { color: var(--bc); font-weight: 700; }
+/* Mythic — rarest tier gets an animated sheen + stronger halo */
+.badge-tile.unlocked[data-tier="mythic"] {
+  border-color: var(--bc);
+  box-shadow: 0 0 26px -6px var(--bc), inset 0 0 0 1px color-mix(in srgb, var(--bc) 40%, transparent);
+  background:
+    linear-gradient(115deg, transparent 30%, color-mix(in srgb, var(--bc) 22%, transparent) 50%, transparent 70%),
+    rgba(255,255,255,0.02);
+  background-size: 220% 100%, auto;
+}
+.badge-tile.unlocked[data-tier="mythic"] .badge-req { letter-spacing: 0.1em; }
+@media (prefers-reduced-motion: no-preference) {
+  .badge-tile.unlocked[data-tier="mythic"] { animation: mythic-sheen 3.6s ease-in-out infinite; }
+}
+@keyframes mythic-sheen {
+  0%, 100% { background-position: 120% 0, 0 0; }
+  50%      { background-position: -20% 0, 0 0; }
+}
 
 .fx-badge-toast {
   position: fixed; top: 84px; left: 50%;
@@ -2442,16 +2551,24 @@ html { scroll-padding-top: 84px; }
     background: var(--line-strong);
     margin: 2px auto 14px;
   }
-  /* Keep the title + close reachable while the body scrolls under them. */
+  /* Header stays in normal flow — making it sticky let the tab row below it
+     (settings/cabinet) scroll up and overlap it. Tap the dim area or the grab
+     handle to dismiss; every sheet also has a Close button at the bottom. */
   .modal-head {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    margin: 0 -18px 16px;
-    padding: 0 18px 14px;
-    background: linear-gradient(var(--bg-2) 70%, transparent);
+    margin: 0 0 14px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--line);
   }
+  /* Settings/cabinet tab rows scroll cleanly with no sticky overlap. */
+  .settings-tabs, .ins-filters { position: static; }
+
+  /* --- Calmer card headers: smaller titles, no overflowing pills/subtitles --- */
+  .summary-left h2 { font-size: 17px; line-height: 1.2; }
+  details.section-card > summary .hint { display: none; } /* cut explainer text on mobile */
+  details.section-card > summary .pill { display: none; } /* was overflowing the card */
+  details.section-card > summary { padding: 16px; gap: 10px; align-items: center; }
+  .boss-name { font-size: 19px; line-height: 1.15; }
+  .boss-label { font-size: 11px; }
 
   /* --- Trim the hero so the daily quests are a shorter scroll away --- */
   .util-actions { display: none; } /* Export / Import / Reset moved to More */

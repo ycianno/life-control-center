@@ -814,6 +814,15 @@ function initMobileTabBar() {
         return;
       }
 
+      // Cabinet opens the trophy cabinet sheet (it's a modal, not a section).
+      if (target === 'cabinet') {
+        moreDrawer.classList.remove('active');
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        openCabinet();
+        return;
+      }
+
       const wasActive = btn.classList.contains('active');
 
       // Close more drawer if open
@@ -839,6 +848,7 @@ function initMobileTabBar() {
   
   // More drawer items
   const moreActions = {
+    'moreScoreboardBtn': () => { moreDrawer.classList.remove('active'); scrollToSection('scoreboard'); },
     'moreReportsBtn': () => { moreDrawer.classList.remove('active'); document.getElementById('reportsModal').classList.add('active'); },
     'moreSettingsBtn': () => { moreDrawer.classList.remove('active'); openSettings(); },
     'moreProjectsBtn': () => { moreDrawer.classList.remove('active'); scrollToSection('projects'); },
@@ -859,11 +869,21 @@ function initMobileTabBar() {
   
   // Close more drawer when clicking outside
   document.addEventListener('click', (e) => {
-    if (moreDrawer.classList.contains('active') && 
-        !moreDrawer.contains(e.target) && 
+    if (moreDrawer.classList.contains('active') &&
+        !moreDrawer.contains(e.target) &&
         !e.target.closest('.tab-btn[data-target="more"]')) {
       moreDrawer.classList.remove('active');
     }
+  });
+
+  // Tapping the dimmed area behind any sheet dismisses it, then re-syncs the
+  // bottom tab to wherever the page is now scrolled.
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', (e) => {
+      if (e.target !== bd) return;
+      bd.classList.remove('active');
+      window.dispatchEvent(new Event('scroll'));
+    });
   });
 }
 
@@ -877,11 +897,12 @@ function scrollToSection(id) {
 
 // Keep the active bottom-tab in sync with what's actually on screen, so the bar
 // stops lying after the user scrolls. Sections without their own tab fold into
-// the nearest one (calendar→Score, diet→Train, projects/review→More).
+// the nearest one — the whole top region (hero/boss/scoreboard/calendar) is
+// Today; diet→Train; projects/review→More. Cabinet is a modal, never scroll-lit.
 function initScrollSpy(tabBtns, moreDrawer) {
   const MAP = [
-    ['charScreen', 'daily'], ['boss', 'daily'], ['daily', 'daily'],
-    ['scoreboard', 'scoreboard'], ['calendar', 'scoreboard'],
+    ['charScreen', 'daily'], ['boss', 'daily'],
+    ['scoreboard', 'daily'], ['calendar', 'daily'], ['daily', 'daily'],
     ['workout', 'workout'], ['diet', 'workout'],
     ['study', 'study'],
     ['projects', 'more'], ['review', 'more'],
@@ -893,6 +914,7 @@ function initScrollSpy(tabBtns, moreDrawer) {
     ticking = false;
     if (!isMobile()) return;
     if (moreDrawer && moreDrawer.classList.contains('active')) return; // don't fight the drawer
+    if (document.querySelector('.modal-backdrop.active')) return; // don't fight an open sheet (e.g. Cabinet)
     // Pick the section sitting closest to the activation line from above — this
     // is order-independent, so it stays correct even though the page's vertical
     // order (scoreboard sits above the daily list) differs from MAP order.
@@ -983,7 +1005,7 @@ function openCabinet() {
   renderTrophyCase();
   document.getElementById("cabinetModal").classList.add("active");
 }
-function closeCabinet() { document.getElementById("cabinetModal").classList.remove("active"); }
+function closeCabinet() { document.getElementById("cabinetModal").classList.remove("active"); window.dispatchEvent(new Event("scroll")); }
 
 // ===== EVENT BINDING =====
 // ===== WEEKLY BOSS =====
