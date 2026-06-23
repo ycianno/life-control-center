@@ -249,6 +249,7 @@ function applyPreset(id) {
   settings.hiddenSections = (p.hidden || []).slice();
   settings.moduleNames = Object.assign({}, p.names || {});
   settings.customModules = (p.custom || []).map((spec) => makeCustomModule(spec));
+  settings.taskLinks = Object.assign({}, p.links || {});
   const order = (p.order && p.order.length) ? p.order.slice() : (window.Forge ? Forge.BUILTIN_ORDER.slice() : []);
   settings.moduleOrder = order.concat(settings.customModules.map((m) => m.id));
   persistSettings();
@@ -586,6 +587,18 @@ function setTaskAttr(text, attr) {
   if (!settings.taskAttrs) settings.taskAttrs = {};
   const key = (window.Forge && Forge.dailyAttrKey) ? Forge.dailyAttrKey(text) : text;
   settings.taskAttrs[key] = attr;
+  persistSettings();
+  applyWeekToUI();
+}
+// A daily task's link to a per-day section (module id), or null. When linked,
+// the task and the section's row for that day are the same checkbox.
+function taskLink(text) {
+  return (window.Forge && Forge.taskLinkOf) ? Forge.taskLinkOf(settings.taskLinks, text) : null;
+}
+function setTaskLink(text, moduleId) {
+  if (!settings.taskLinks) settings.taskLinks = {};
+  const key = (window.Forge && Forge.dailyAttrKey) ? Forge.dailyAttrKey(text) : text;
+  if (moduleId) settings.taskLinks[key] = moduleId; else delete settings.taskLinks[key];
   persistSettings();
   applyWeekToUI();
 }
@@ -1174,6 +1187,18 @@ function renderDays() {
     card.innerHTML = `<summary class="day-summary"><div><div class="day-title">${day}${isToday ? '<span class="today-tag">Today</span>' : ''}</div><div class="date-tag">${fmt(date)}</div></div><div class="day-actions"><span class="badge" id="dayBadge-${dayIndex}">0/0</span><button class="icon-btn edit-day-btn" type="button" data-day-index="${dayIndex}" title="Edit ${day} checklist">${pencil}</button></div></summary><div class="day-content"><div class="bar"><div class="bar-fill" id="dayBar-${dayIndex}"></div></div><div class="task-group"></div></div>`;
     const group = card.querySelector(".task-group");
     tasks.forEach((task, taskIndex) => {
+      const link = taskLink(task);
+      const linkMod = link ? getModules().find((m) => m.id === link) : null;
+      const targetId = (link && window.Forge) ? Forge.linkTargetId(link, getModules(), dayIndex) : null;
+      if (linkMod && targetId) {
+        // Linked task → a PROXY over the section's per-day checkbox (shared id).
+        // No id/data-save/data-cat so it can't double-count; it writes the same
+        // week.checks key the section uses. The badge shows where it links.
+        const lattr = linkMod.attr;
+        const lxp = (window.Game && Game.xpForCat) ? Game.xpForCat(linkMod.category) : 30;
+        group.insertAdjacentHTML("beforeend", `<label class="check quest linked"><input type="checkbox" data-link-id="${escapeHtml(targetId)}" ${wk.checks[targetId] ? "checked" : ""}><span class="q-text">${escapeHtml(task)}</span><span class="link-badge" style="--ac:${attrColor(lattr)}" title="Linked to ${escapeHtml(linkMod.name)} — one shared check"><svg viewBox="0 0 24 24" class="ic"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07L11.5 4.5M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07L10.5 19.5"/></svg>${escapeHtml(linkMod.name)}</span><span class="q-xp">+${lxp}</span></label>`);
+        return;
+      }
       const id = taskId(dayIndex, task);
       const legacyId = `day-${dayIndex}-task-${taskIndex}`;
       if (wk.checks[id] === undefined && wk.checks[legacyId] !== undefined) wk.checks[id] = wk.checks[legacyId];
@@ -1253,6 +1278,12 @@ function loadWeekFields() {
     else if (el.type === "number") el.value = el.defaultValue || 0;
     else if (el.tagName === "TEXTAREA") el.value = "";
   });
+  syncLinkedProxies(wk);
+}
+// Keep linked daily-task proxies in step with the section checkbox they share.
+function syncLinkedProxies(wk) {
+  wk = wk || getWeekData();
+  document.querySelectorAll("input[data-link-id]").forEach((cb) => { cb.checked = !!wk.checks[cb.getAttribute("data-link-id")]; });
 }
 
 function saveWeekField(el) {
@@ -1329,6 +1360,7 @@ function updateProgress() {
   const reviewDone = ["wins", "misses", "changes", "refuseDrop"].filter(id => document.getElementById(id)?.value.trim()).length;
   setMetric("review", percent(reviewDone, 4));
   renderXpChips();
+  syncLinkedProxies();
   if (typeof renderBoss === "function") renderBoss();
 }
 
@@ -1842,6 +1874,20 @@ function renderTrends() {
 
 function bindEvents() {
   document.addEventListener("input", e => { if (e.target.matches("[data-save]")) { saveWeekField(e.target); updateProgress(); } });
+  // Linked daily-task proxy → writes the section's shared check id (counts once).
+  document.addEventListener("change", e => {
+    if (!e.target.matches || !e.target.matches("input[data-link-id]")) return;
+    const id = e.target.getAttribute("data-link-id");
+    if (!id) return;
+    const wk = getWeekData();
+    wk.checks[id] = e.target.checked;
+    wk.updatedAt = new Date().toISOString();
+    const secEl = document.getElementById(id);          // mirror onto the section's own checkbox
+    if (secEl && secEl.type === "checkbox") secEl.checked = e.target.checked;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { persistDatabase(); updateStreakAndHeatmap(); if (window.Game) Game.render(); }, 80);
+    updateProgress();
+  });
   // Certification target dates (stored in settings.certDates, not week fields)
   document.addEventListener("change", e => {
     if (!e.target.matches("[data-certdate]")) return;
@@ -2276,9 +2322,11 @@ function renderDayEditorRows(rows) {
   const wrap = document.getElementById("editDayRows");
   if (!wrap) return;
   const attrs = dayEditorAttrs();
+  const links = (window.Forge && Forge.linkableModules) ? Forge.linkableModules(getModules()) : [];
   wrap.innerHTML = rows.map((row) => {
     const attr = row.attr || "Discipline";
     const opts = attrs.map((a) => `<option value="${a}" ${a === attr ? "selected" : ""}>${escapeHtml(attrName(a))}</option>`).join("");
+    const linkSel = links.length ? `<select class="de-link" aria-label="Link to section" title="Link to a section so it's one shared checkbox"><option value="">— no link</option>${links.map((m) => `<option value="${m.id}" ${row.link === m.id ? "selected" : ""}>↔ ${escapeHtml(m.name)}</option>`).join("")}</select>` : "";
     return `<div class="day-edit-row">
       <div class="de-move">
         <button class="de-up" type="button" aria-label="Move up"><svg viewBox="0 0 24 24" class="ic"><path d="M18 15l-6-6-6 6"/></svg></button>
@@ -2287,6 +2335,7 @@ function renderDayEditorRows(rows) {
       <span class="de-dot" style="--ac:${attrColor(attr)}"></span>
       <input class="de-text" type="text" value="${escapeHtml(row.text)}" placeholder="Task name" spellcheck="false">
       <select class="de-attr" aria-label="Stat">${opts}</select>
+      ${linkSel}
       <button class="de-del" type="button" aria-label="Remove task"><svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>`;
   }).join("");
@@ -2295,6 +2344,7 @@ function dayEditorReadRows() {
   return [...document.querySelectorAll("#editDayRows .day-edit-row")].map((r) => ({
     text: r.querySelector(".de-text").value.trim(),
     attr: r.querySelector(".de-attr").value,
+    link: (r.querySelector(".de-link") ? r.querySelector(".de-link").value : "") || "",
   }));
 }
 function openDayEditor(dayIndex) {
@@ -2302,7 +2352,7 @@ function openDayEditor(dayIndex) {
   const name = dayNames()[dayIndex];
   const tasks = getDailyBlueprint()[name] || [];
   document.getElementById("editDayTitle").textContent = `Edit ${name} Checklist`;
-  renderDayEditorRows(tasks.map((t) => ({ text: t, attr: taskAttr(t) })));
+  renderDayEditorRows(tasks.map((t) => ({ text: t, attr: taskAttr(t), link: taskLink(t) })));
   document.getElementById("editDayModal").classList.add("active");
   document.getElementById("editDayModal").setAttribute("aria-hidden", "false");
 }
@@ -2324,7 +2374,13 @@ async function saveDayTemplate() {
   // Persist each task's chosen attribute explicitly (keyed by task slug) so it's
   // no longer inferred — the picker is now the source of truth.
   if (!settings.taskAttrs) settings.taskAttrs = {};
-  rows.forEach((r) => { if (window.Forge) settings.taskAttrs[Forge.dailyAttrKey(r.text)] = r.attr; });
+  if (!settings.taskLinks) settings.taskLinks = {};
+  rows.forEach((r) => {
+    if (!window.Forge) return;
+    const k = Forge.dailyAttrKey(r.text);
+    settings.taskAttrs[k] = r.attr;
+    if (r.link) settings.taskLinks[k] = r.link; else delete settings.taskLinks[k];
+  });
   await persistSettings();
   closeDayEditor();
   applyWeekToUI();

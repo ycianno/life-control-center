@@ -52,6 +52,25 @@
     return ATTR_OF_CAT[categoryFor(text)] || "Discipline";
   }
 
+  // ----- daily task ↔ section links ----------------------------------------
+  // A daily task can be linked to a per-day section so they're ONE checkbox.
+  // settings.taskLinks maps a task slug -> a module id (a `table` section, the
+  // only type with a per-day checkbox). The link resolves to that section's row
+  // for the given day, so checking either place ticks the same week.checks id.
+  function taskLinkOf(taskLinks, text) {
+    if (!taskLinks) return null;
+    return taskLinks[dailyAttrKey(text)] || null;
+  }
+  function linkTargetId(moduleId, modules, dayIndex) {
+    const m = (modules || []).find((x) => x.id === moduleId);
+    if (!m) return null;
+    if (m.type === "table") return `${m.idPrefix}-${dayIndex}`;
+    return null; // only per-day (table) sections expose a daily checkbox to share
+  }
+  function linkableModules(modules) {
+    return (modules || []).filter((m) => m.type === "table");
+  }
+
   // ----- category inference for free-text daily tasks (relocated from app.js) -
   function categoryFor(text) {
     const t = String(text).toLowerCase();
@@ -92,7 +111,8 @@
     return [
       { id: "daily", type: "daily", name: "Daily Habits", icon: "check", source: "daily",
         countScore: true, attr: null, category: null, enabled: true, order: 1,
-        blueprint: settings.dayTemplates || clone(DEFAULT_BLUEPRINT), taskAttrs: settings.taskAttrs || {} },
+        blueprint: settings.dayTemplates || clone(DEFAULT_BLUEPRINT), taskAttrs: settings.taskAttrs || {},
+        taskLinks: settings.taskLinks || {} },
       { id: "workout", type: "table", name: "Training", icon: "dumbbell", source: "training",
         countScore: true, attr: "Body", category: "training", enabled: true, order: 2,
         idPrefix: "workout", checkCount: 7, rows: settings.workouts || clone(DEFAULT_WORKOUTS),
@@ -170,7 +190,10 @@
       if (!m.countScore) return;     // `enabled` is visibility-only (see note above)
       if (m.type === "daily") {
         const bp = m.blueprint || {};
-        Object.keys(bp).forEach((day, i) => (bp[day] || []).forEach((t) => set.add(taskId(i, t))));
+        Object.keys(bp).forEach((day, i) => (bp[day] || []).forEach((t) => {
+          if (taskLinkOf(m.taskLinks, t)) return;   // counted by its linked section instead
+          set.add(taskId(i, t));
+        }));
       } else if (m.type === "table") {
         const n = m.checkCount != null ? m.checkCount : (m.rows ? m.rows.length : 0);
         for (let i = 0; i < n; i++) set.add(`${m.idPrefix}-${i}`);
@@ -209,6 +232,7 @@
       if (m.type === "daily") {
         const bp = m.blueprint || {};
         Object.keys(bp).forEach((day, i) => (bp[day] || []).forEach((t) => {
+          if (taskLinkOf(m.taskLinks, t)) return;       // XP comes from the linked section
           if (checks[taskId(i, t)]) {
             const attr = dailyAttr(t, m.taskAttrs);     // explicit attribute, else keyword default
             const c = CAT_OF_ATTR[attr] || "discipline";
@@ -253,6 +277,7 @@
     operator: {
       name: "Operator", desc: "The original: discipline, training, study, projects, review.",
       hidden: [], order: BUILTIN_ORDER, names: {}, custom: [],
+      links: { workout: "workout" }, // the daily "Workout" habit IS today's Training row
     },
     student: {
       name: "Student", desc: "Study-first — classes, reading and projects.",
@@ -296,6 +321,6 @@
   return {
     XP_BY_CAT, ATTR_OF_CAT, CAT_OF_ATTR, ATTR_LIST, ATTR_COLOR, STUDY_HOUR_XP, PROJECT_HOUR_XP, REVIEW_XP, PRESETS, BUILTIN_ORDER,
     DEFAULT_BLUEPRINT, DEFAULT_WORKOUTS, DEFAULT_DIET, DEFAULT_PROJECT_CHECKS, DEFAULT_STUDY_AREAS, DEFAULT_REVIEW,
-    slug, taskId, checklistId, categoryFor, dailyAttr, dailyAttrKey, migrateModules, buildBaseModules, applyOverlays, scoreIds, weekScore, weekXp,
+    slug, taskId, checklistId, categoryFor, dailyAttr, dailyAttrKey, taskLinkOf, linkTargetId, linkableModules, migrateModules, buildBaseModules, applyOverlays, scoreIds, weekScore, weekXp,
   };
 });
