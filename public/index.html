@@ -17,12 +17,12 @@
       <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 192 192"><path d="M22 80 L62 64 L62 96 Z"/><rect x="54" y="56" width="118" height="28" rx="8"/><path d="M86 84 H142 L124 120 H100 Z"/><path d="M60 120 H160 L178 156 H42 Z"/></svg></span><span>The Forge</span> <span id="streakBadge" class="streak-badge" style="display:none;">🔥 <span id="streakCount">0</span> <span id="streakUnit">Weeks</span></span></div>
       <nav class="nav" id="mainNav">
         <!-- Desktop nav links -->
-        <a href="#scoreboard" class="desktop-nav-item">Scoreboard</a>
+        <a href="#scoreboard" class="desktop-nav-item">Quest Log</a>
         <a href="#daily" class="desktop-nav-item">Daily</a>
         <a href="#workout" class="desktop-nav-item">Training</a>
-        <a href="#diet" class="desktop-nav-item">Nutrition</a>
-        <a href="#study" class="desktop-nav-item">Study</a>
-        <a href="#projects" class="desktop-nav-item">Projects</a>
+        <a href="#diet" class="desktop-nav-item">Provisions</a>
+        <a href="#study" class="desktop-nav-item">Scholarship</a>
+        <a href="#projects" class="desktop-nav-item">Workshop</a>
         <span class="nav-divider desktop-nav-item" aria-hidden="true"></span>
         <button class="ghost nav-icon desktop-nav-item" id="openFocusBtn" title="Focus timer" aria-label="Focus timer"><svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="13" r="8"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9 2h6"/></svg></button>
         <button class="ghost nav-icon desktop-nav-item" id="openCalendarBtn" title="Calendar" aria-label="Calendar"><svg viewBox="0 0 24 24" class="ic"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>
@@ -78,12 +78,12 @@
     <!-- More Drawer (mobile) -->
     <div class="more-drawer" id="moreDrawer">
       <div class="more-grid">
-        <button class="more-item" id="moreScoreboardBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="m9 13 2 2 4-4"/></svg></span>Scoreboard</button>
+        <button class="more-item" id="moreScoreboardBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="m9 13 2 2 4-4"/></svg></span>Quest Log</button>
         <button class="more-item" id="moreReportsBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/></svg></span>Reports</button>
         <button class="more-item" id="moreSettingsBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>Settings</button>
-        <button class="more-item" id="moreProjectsBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg></span>Projects</button>
-        <button class="more-item" id="moreDietBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06z"/><path d="M10 2c1 .5 2 2 2 5"/></svg></span>Nutrition</button>
-        <button class="more-item" id="moreReviewBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>Review</button>
+        <button class="more-item" id="moreProjectsBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg></span>Workshop</button>
+        <button class="more-item" id="moreDietBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06z"/><path d="M10 2c1 .5 2 2 2 5"/></svg></span>Provisions</button>
+        <button class="more-item" id="moreReviewBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>War Council</button>
         <button class="more-item" id="moreCalendarBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Calendar</button>
         <button class="more-item" id="moreExpandBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span>Expand All</button>
         <button class="more-item" id="moreCollapseBtn"><span class="more-icon"><svg viewBox="0 0 24 24" class="ic"><path d="M8 5l4 4 4-4M8 19l4-4 4 4"/></svg></span>Collapse All</button>
@@ -201,12 +201,12 @@
     </section>
 
     <details id="scoreboard" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Weekly Scoreboard</h2><p class="hint">Commitments are separated from bonus targets so the system stays honest.</p></div><div style="display:flex;gap:8px;align-items:center;"><button class="icon-btn edit-metrics-btn" type="button" title="Edit Metrics"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
+      <summary><div class="summary-left"><h2>Quest Log</h2><p class="hint">Commitments are separated from bonus targets so the system stays honest.</p></div><div style="display:flex;gap:8px;align-items:center;"><button class="icon-btn edit-metrics-btn" type="button" title="Edit Metrics"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
       <div class="content"><div class="grid grid-4" id="scoreboardGrid"></div></div>
     </details>
 
     <details id="daily" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Daily Habits</h2><p class="hint">Daily basics protect the structure. Build each day's checklist however you train.</p></div><span class="chev">⌄</span></summary>
+      <summary><div class="summary-left"><h2>Daily Quests</h2><p class="hint">Daily basics protect the structure. Build each day's checklist however you train.</p></div><span class="chev">⌄</span></summary>
       <div class="content"><div class="grid grid-2" id="daysGrid"></div></div>
     </details>
 
@@ -216,12 +216,12 @@
     </details>
 
     <details id="diet" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Nutrition</h2><p class="hint">Track the daily nutrition behaviors you want to keep.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill blue" id="pillDiet">7 protein days</span><button class="icon-btn edit-diet-btn" type="button" title="Edit Diet Plan"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
+      <summary><div class="summary-left"><h2>Provisions</h2><p class="hint">Track the daily nutrition behaviors you want to keep.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill blue" id="pillDiet">7 protein days</span><button class="icon-btn edit-diet-btn" type="button" title="Edit Diet Plan"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
       <div class="content grid grid-3" id="dietRows"></div>
     </details>
 
     <details id="study" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Study</h2><p class="hint">Connect studying to the direction you're growing toward.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill blue" id="pillStudy">14 hours/week minimum</span><button class="icon-btn edit-study-btn" type="button" title="Edit Study Plan"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
+      <summary><div class="summary-left"><h2>Scholarship</h2><p class="hint">Connect studying to the direction you're growing toward.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill blue" id="pillStudy">14 hours/week minimum</span><button class="icon-btn edit-study-btn" type="button" title="Edit Study Plan"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
       <div class="content">
         <div id="certSummary" class="cert-summary"></div>
         <table>
@@ -233,7 +233,7 @@
     </details>
 
     <details id="projects" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Projects</h2><p class="hint">Hours only count when the work creates output. Research without output is a hobby.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill green" id="pillProject">2 hrs minimum · 3 bonus</span><button class="icon-btn edit-project-btn" type="button" title="Edit Project Outputs"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
+      <summary><div class="summary-left"><h2>Workshop</h2><p class="hint">Hours only count when the work creates output. Research without output is a hobby.</p></div><div style="display:flex;gap:8px;align-items:center;"><span class="pill green" id="pillProject">2 hrs minimum · 3 bonus</span><button class="icon-btn edit-project-btn" type="button" title="Edit Project Outputs"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
       <div class="content grid grid-3">
         <div class="metric"><div class="top"><div><div class="metric-title">Project Hours</div><p class="hint" id="hintProject">Minimum target: 2 hrs</p></div><span class="metric-number"><span id="projectHoursValue">0</span>/<span id="projectTargetValue">2</span></span></div><div class="bar"><div class="bar-fill" id="projectBar"></div></div><label class="label" style="margin-top:14px">Hours completed</label><input id="projectHours" data-save type="number" min="0" step="0.25" value="0"></div>
         <div class="metric"><div class="metric-title">Valid Output</div><div id="projectChecks"></div></div>
@@ -242,7 +242,7 @@
     </details>
 
     <details id="review" class="section section-card glass" open>
-      <summary><div class="summary-left"><h2>Weekly Review</h2><p class="hint">At the end of the week, copy this summary and paste it into ChatGPT for analysis.</p></div><div style="display:flex;gap:8px;align-items:center;"><button class="icon-btn edit-review-btn" type="button" title="Edit Review Prompts"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
+      <summary><div class="summary-left"><h2>War Council</h2><p class="hint">At the end of the week, copy this summary and paste it into ChatGPT for analysis.</p></div><div style="display:flex;gap:8px;align-items:center;"><button class="icon-btn edit-review-btn" type="button" title="Edit Review Prompts"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>
       <div class="content grid grid-2">
         <div><label class="label" id="lblWins">Wins this week</label><textarea id="wins" data-save></textarea></div>
         <div><label class="label" id="lblMisses">Missed habits / friction</label><textarea id="misses" data-save></textarea></div>
@@ -258,7 +258,7 @@
         <div class="modal-head">
           <div class="modal-title-wrap">
             <span class="modal-ico" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
-            <h3 id="editSectionTitle">Edit Section</h3>
+            <h3 id="editSectionTitle">Edit Pursuit</h3>
           </div>
           <button class="modal-close" id="editSectionClose" type="button" aria-label="Close"><svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
@@ -304,7 +304,7 @@
 
         <div class="settings-tabs">
           <button class="settings-tab active" data-settings-tab="goals">Targets</button>
-          <button class="settings-tab" data-settings-tab="modules">Sections</button>
+          <button class="settings-tab" data-settings-tab="modules">Pursuits</button>
           <button class="settings-tab" data-settings-tab="profile">Profile</button>
           <button class="settings-tab" data-settings-tab="appearance">Themes</button>
           <button class="settings-tab" data-settings-tab="data">Data</button>
@@ -345,7 +345,7 @@
 
         <!-- Sections Tab -->
         <div class="settings-panel" id="settingsModules" data-panel="modules" style="display:none;">
-          <p class="settings-intro">Rename your sections, reorder them, and show or hide the ones you don't use. This is your dashboard — make it yours.</p>
+          <p class="settings-intro">Your pursuits — the areas of life you're leveling up. Rename, reorder, show/hide, or add your own. This is your dashboard — make it yours.</p>
           <div class="modules-editor" id="modulesEditor"></div>
           <p class="settings-intro" style="margin-top:22px;">Your stats — rename each and pick its color. The five stats stay; only how they look changes.</p>
           <div class="stats-editor" id="statsEditor"></div>
@@ -353,7 +353,7 @@
 
         <!-- Profile Tab -->
         <div class="settings-panel" id="settingsProfile" data-panel="profile" style="display:none;">
-          <p class="settings-intro">Your operator identity and which dashboard sections to show.</p>
+          <p class="settings-intro">Your hero identity and which pursuits to show.</p>
           <label class="label">Callsign</label>
           <input type="text" id="cfgCallsign" placeholder="Player One" maxlength="28">
           <label class="label" style="margin-top:18px;">Visible sections</label>
@@ -649,10 +649,10 @@
     <p class="footer-note">Data is saved on your server by week using a versioned SQLite database. Use Export Backup before major changes.</p>
   </main>
 
-  <script src="modules.js?v=8"></script>
+  <script src="modules.js?v=9"></script>
   <script src="game.js?v=16"></script>
   <script src="fx.js?v=9"></script>
-  <script src="app.js?v=42"></script>
+  <script src="app.js?v=43"></script>
   <script src="extras.js?v=1"></script>
 </body>
 </html>

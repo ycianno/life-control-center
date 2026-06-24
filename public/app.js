@@ -85,7 +85,7 @@ function customHint(m) {
   return "";
 }
 function customSectionHtml(m) {
-  const head = `<summary><div class="summary-left"><h2>${escapeHtml(m.name)}</h2><p class="hint">${escapeHtml(customHint(m))}</p></div><div style="display:flex;gap:8px;align-items:center;"><button class="icon-btn edit-section-btn" type="button" data-module-id="${m.id}" title="Edit section"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>`;
+  const head = `<summary><div class="summary-left"><h2>${escapeHtml(m.name)}</h2><p class="hint">${escapeHtml(customHint(m))}</p></div><div style="display:flex;gap:8px;align-items:center;"><button class="icon-btn edit-section-btn" type="button" data-module-id="${m.id}" title="Edit pursuit"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><span class="chev">⌄</span></div></summary>`;
   let body = "";
   if (m.type === "checklist") {
     body = `<div class="content"><div class="grid grid-3">` + (m.items || []).map((it) =>
@@ -152,15 +152,15 @@ function renderModulesEditor() {
       <input class="mod-name" type="text" value="${escapeHtml(m.name)}" maxlength="28" aria-label="Section name" spellcheck="false">
       <label class="mod-show"><input type="checkbox" class="mod-enabled" ${m.enabled ? "checked" : ""}><span>Show</span></label>
       ${m.custom
-        ? `<button class="mod-edit" type="button" title="Edit section" aria-label="Edit section"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
-           <button class="mod-del" type="button" title="Delete section" aria-label="Delete section"><svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`
-        : `<span class="mod-builtin" title="Built-in section (edit its content from the section itself)"><svg viewBox="0 0 24 24" class="ic"><path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3z"/></svg></span>`}
+        ? `<button class="mod-edit" type="button" title="Edit pursuit" aria-label="Edit pursuit"><svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+           <button class="mod-del" type="button" title="Delete pursuit" aria-label="Delete pursuit"><svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`
+        : `<span class="mod-builtin" title="Built-in pursuit (edit its content from the pursuit itself)"><svg viewBox="0 0 24 24" class="ic"><path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3z"/></svg></span>`}
     </div>`;
     return row;
   }).join("");
   const form = `
     <div class="mod-add">
-      <button class="mod-add-toggle" type="button" id="modAddToggle">+ Add a section</button>
+      <button class="mod-add-toggle" type="button" id="modAddToggle">+ Add a pursuit</button>
       <div class="mod-add-form" id="modAddForm" style="display:none;">
         <label class="label">Name</label>
         <input type="text" id="newModName" placeholder="e.g. Reading" maxlength="28">
@@ -189,7 +189,7 @@ function renderModulesEditor() {
         <input type="number" id="newModXp" min="0" step="1" value="10">
         <div class="modal-actions" style="margin-top:12px;">
           <button type="button" id="newModCancel">Cancel</button>
-          <button type="button" class="primary" id="newModSave">Add Section</button>
+          <button type="button" class="primary" id="newModSave">Add Pursuit</button>
         </div>
       </div>
     </div>`;
@@ -281,7 +281,7 @@ function toggleAddFormFields() {
 }
 function addCustomModuleFromForm() {
   const name = (document.getElementById("newModName").value || "").trim();
-  if (!name) { alert("Give the section a name."); return; }
+  if (!name) { alert("Give the pursuit a name."); return; }
   const m = makeCustomModule({
     name,
     type: document.getElementById("newModType").value,
@@ -299,7 +299,7 @@ function addCustomModuleFromForm() {
   applyWeekToUI();
 }
 function deleteCustomModule(id) {
-  if (!confirm("Delete this section? Anything you already logged stays in your weeks; only the section is removed.")) return;
+  if (!confirm("Delete this pursuit? Anything you already logged stays in your weeks; only the pursuit is removed.")) return;
   settings.customModules = (settings.customModules || []).filter((m) => m.id !== id);
   if (Array.isArray(settings.moduleOrder)) settings.moduleOrder = settings.moduleOrder.filter((x) => x !== id);
   if (settings.moduleNames) delete settings.moduleNames[id];
@@ -1032,12 +1032,12 @@ function updateStreakAndHeatmap() {
 const defaultMetrics = [
   ["discipline", "Daily Discipline", "Basics completed", "0%"],
   ["training", "Training", "Workout and movement", "0%"],
-  ["protein", "Protein / Diet", "Nutrition floor", "0%"],
-  ["study", "Daily Study", "2 hrs/day target", "0%"],
-  ["career-hours", "Certification Hours", "14 hrs/week", "0%"],
-  ["projects-hours", "Projects", "2 hrs/week", "0%"],
-  ["projects-bonus", "Project Bonus", "3 hrs stretch", "0%"],
-  ["review", "Weekly Review", "Reflection completed", "0%"]
+  ["protein", "Provisions", "Nutrition floor", "0%"],
+  ["study", "Scholarship", "Daily study target", "0%"],
+  ["career-hours", "Scholarship Hours", "Weekly study hours", "0%"],
+  ["projects-hours", "Workshop", "Weekly output hours", "0%"],
+  ["projects-bonus", "Workshop Bonus", "Stretch hours", "0%"],
+  ["review", "War Council", "Reflection completed", "0%"]
 ];
 function getMetrics() { return settings.metrics || defaultMetrics; }
 
@@ -1693,9 +1693,9 @@ function initScrollSpy(tabBtns, moreDrawer) {
 // ===== SETTINGS MODAL =====
 // ===== SECTION VISIBILITY =====
 const SECTIONS = [
-  ["boss", "Weekly Boss"], ["scoreboard", "Scoreboard"], ["daily", "Daily"],
-  ["workout", "Training"], ["diet", "Nutrition"], ["study", "Study"],
-  ["projects", "Projects"], ["review", "Review"]
+  ["boss", "Weekly Boss"], ["scoreboard", "Quest Log"], ["daily", "Daily Quests"],
+  ["workout", "Training"], ["diet", "Provisions"], ["study", "Scholarship"],
+  ["projects", "Workshop"], ["review", "War Council"]
 ];
 function getHiddenSections() { return settings.hiddenSections || []; }
 function applySectionVisibility() {
