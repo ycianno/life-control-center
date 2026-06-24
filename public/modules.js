@@ -53,46 +53,81 @@
   }
 
   // ----- daily task ↔ section links ----------------------------------------
-  // A daily task can be linked to a per-day section so they're ONE checkbox.
-  // settings.taskLinks maps a task slug -> a module id (a `table` section, the
-  // only type with a per-day checkbox). The link resolves to that section's row
-  // for the given day, so checking either place ticks the same week.checks id.
-  // A link is a ref { m: moduleId, item?: itemText }. A bare string is treated as
-  // { m: string } for backward compatibility with the first (table-only) version.
+  // A link ref = { m: moduleId, item?: string, mode: "share"|"count"|"stat" }:
+  //   share → ONE shared checkbox (table day-row, checklist/composite item)
+  //   count → each completed day adds +1 "session" to the section's number
+  //   stat  → the daily task keeps its own checkbox; only its stat is set to the
+  //           section's (used for notes, which have no checkbox or number)
+  // A bare string / modeless object defaults to share (legacy table/checklist links).
   function normLink(link) {
     if (!link) return null;
-    return (typeof link === "string") ? { m: link } : link;
+    if (typeof link === "string") return { m: link, mode: "share" };
+    return Object.assign({ mode: "share" }, link);
   }
-  function taskLinkOf(taskLinks, text) {
-    if (!taskLinks) return null;
-    return taskLinks[dailyAttrKey(text)] || null;
-  }
-  // The shared checkbox id for a link, or null when the section has no checkbox
-  // (counter / hours-table / notes) — those "attach" by attribute instead.
+  function taskLinkOf(taskLinks, text) { if (!taskLinks) return null; return taskLinks[dailyAttrKey(text)] || null; }
+  function linkModule(link, modules) { const ref = normLink(link); if (!ref) return null; return (modules || []).find((x) => x.id === ref.m) || null; }
+  // The shared checkbox id for a share-mode link, else null.
   function linkTargetId(link, modules, dayIndex) {
-    const ref = normLink(link); if (!ref) return null;
+    const ref = normLink(link); if (!ref || ref.mode !== "share") return null;
     const m = (modules || []).find((x) => x.id === ref.m);
     if (!m) return null;
-    if (m.type === "table") return `${m.idPrefix}-${dayIndex}`;                              // per-day row
-    if (m.type === "checklist" && ref.item) return checklistId(m.idPrefix, ref.item);        // weekly item
-    if (m.type === "composite" && m.outputs && ref.item) return checklistId(m.outputs.idPrefix, ref.item); // project output
-    return null; // counter / hours-table / notes → attribute attach (no shared checkbox)
+    if (m.type === "table") return `${m.idPrefix}-${dayIndex}`;
+    if (m.type === "checklist" && ref.item) return checklistId(m.idPrefix, ref.item);
+    if (m.type === "composite" && m.outputs && ref.item) return checklistId(m.outputs.idPrefix, ref.item);
+    return null;
   }
-  // Every enabled section a daily task can link to. Sections with a checkbox give
-  // one entry per checkbox (share it); sections without give a single "(stat)"
-  // entry (attach by attribute). Daily can't link to itself.
+  // Every enabled section a daily task can link to, with the right mode per type.
+  // Daily can't link to itself.
   function linkTargets(modules) {
     const out = [];
     (modules || []).forEach((m) => {
       if (m.enabled === false || m.type === "daily") return;
-      if (m.type === "table") { out.push({ ref: { m: m.id }, label: `${m.name} (daily)`, attr: m.attr, kind: "share" }); return; }
-      if (m.type === "checklist") (m.items || []).forEach((it) => out.push({ ref: { m: m.id, item: it }, label: `${m.name}: ${it} (weekly)`, attr: m.attr, kind: "share" }));
-      else if (m.type === "composite" && m.outputs) (m.outputs.items || []).forEach((it) => out.push({ ref: { m: m.id, item: it }, label: `${m.name}: ${it} (weekly)`, attr: m.attr, kind: "share" }));
-      out.push({ ref: { m: m.id }, label: `${m.name} (stat)`, attr: m.attr, kind: "attach" }); // attach by attribute
+      if (m.type === "table") out.push({ ref: { m: m.id, mode: "share" }, label: `${m.name} (daily)`, attr: m.attr });
+      else if (m.type === "checklist") (m.items || []).forEach((it) => out.push({ ref: { m: m.id, item: it, mode: "share" }, label: `${m.name}: ${it} (weekly)`, attr: m.attr }));
+      else if (m.type === "composite") {
+        if (m.outputs) (m.outputs.items || []).forEach((it) => out.push({ ref: { m: m.id, item: it, mode: "share" }, label: `${m.name}: ${it} (weekly)`, attr: m.attr }));
+        out.push({ ref: { m: m.id, mode: "count" }, label: `${m.name} (+1 hour/day)`, attr: m.attr });
+      }
+      else if (m.type === "counter") out.push({ ref: { m: m.id, mode: "count" }, label: `${m.name} (+1 ${(m.target && m.target.unit) || "session"}/day)`, attr: m.attr });
+      else if (m.type === "hours-table") out.push({ ref: { m: m.id, mode: "count" }, label: `${m.name} (+1 hour/day)`, attr: m.attr });
+      else if (m.type === "notes") out.push({ ref: { m: m.id, mode: "stat" }, label: `${m.name} (stat only)`, attr: m.attr });
     });
     return out;
   }
-  function linkModule(link, modules) { const ref = normLink(link); if (!ref) return null; return (modules || []).find((x) => x.id === ref.m) || null; }
+  // A daily task is "consumed" by its section (the daily handler skips it, so it
+  // isn't double-counted) when it shares a checkbox or feeds a count. `stat` links
+  // are NOT consumed — the task keeps its own checkbox + XP (just its stat is set).
+  function linkConsumesDaily(link, modules, dayIndex) {
+    const ref = normLink(link); if (!ref) return false;
+    if (ref.mode === "share") return !!linkTargetId(link, modules, dayIndex);
+    if (ref.mode === "count") return true;
+    return false;
+  }
+  // Days that a section's count-mode linked daily tasks were completed this week.
+  function linkedCountDays(week, modules, moduleId) {
+    if (!week || !week.checks) return 0;
+    const dm = (modules || []).find((x) => x.type === "daily");
+    if (!dm || !dm.taskLinks) return 0;
+    const bp = dm.blueprint || {};
+    let days = 0;
+    Object.keys(bp).forEach((day, i) => (bp[day] || []).forEach((t) => {
+      const link = taskLinkOf(dm.taskLinks, t); if (!link) return;
+      const ref = normLink(link);
+      if (ref.mode !== "count" || ref.m !== moduleId) return;
+      if (week.checks[taskId(i, t)]) days++;
+    }));
+    return days;
+  }
+  // The number a section already tracks (counter value / total hours), before
+  // adding the linked-day "sessions".
+  function moduleCountBase(week, m) {
+    const fields = (week && week.fields) || {};
+    if (m.type === "counter") return Number(fields[counterField(m)] || 0);
+    if (m.type === "hours-table") { let h = 0; const pre = m.hoursPrefix + "-"; for (const k in fields) if (k.indexOf(pre) === 0) h += Number(fields[k] || 0); return h; }
+    if (m.type === "composite") return Number(fields[m.hoursField] || 0);
+    return 0;
+  }
+  function moduleCountValue(week, modules, m) { return moduleCountBase(week, m) + linkedCountDays(week, modules, m.id); }
 
   // ----- category inference for free-text daily tasks (relocated from app.js) -
   function categoryFor(text) {
@@ -215,8 +250,8 @@
         const bp = m.blueprint || {};
         Object.keys(bp).forEach((day, i) => (bp[day] || []).forEach((t) => {
           const link = taskLinkOf(m.taskLinks, t);
-          if (link && linkTargetId(link, modules, i)) return;   // shared checkbox counted by its section
-          set.add(taskId(i, t));                                 // own checkbox (incl. attach links)
+          if (link && linkConsumesDaily(link, modules, i)) return;  // shared/counted by its section
+          set.add(taskId(i, t));                                     // own checkbox (incl. stat links)
         }));
       } else if (m.type === "table") {
         const n = m.checkCount != null ? m.checkCount : (m.rows ? m.rows.length : 0);
@@ -226,7 +261,7 @@
       } else if (m.type === "counter") {
         extraTotal++;
         const tgt = (m.target && m.target.value) ? Number(m.target.value) : 1;
-        if (Number(fields[counterField(m)] || 0) >= tgt) extraDone++;
+        if (moduleCountValue(week, modules, m) >= tgt) extraDone++;
       } else if (m.type === "notes") {
         extraTotal++;
         const v = fields[notesField(m)];
@@ -257,7 +292,7 @@
         const bp = m.blueprint || {};
         Object.keys(bp).forEach((day, i) => (bp[day] || []).forEach((t) => {
           const link = taskLinkOf(m.taskLinks, t);
-          if (link && linkTargetId(link, modules, i)) return;   // shared id — its section awards it
+          if (link && linkConsumesDaily(link, modules, i)) return;   // shared/counted by its section
           if (checks[taskId(i, t)]) {
             let attr;
             if (link) { const lm = (modules || []).find((x) => x.id === normLink(link).m); if (lm) attr = lm.attr; } // attach → section's stat
@@ -272,20 +307,19 @@
       } else if (m.type === "checklist") {
         (m.items || []).forEach((it) => { if (checks[checklistId(m.idPrefix, it)]) award(m.category, m.xpPer, m.source); });
       } else if (m.type === "hours-table") {
-        let hours = 0;
-        const pre = m.hoursPrefix + "-";
-        for (const k in fields) if (k.indexOf(pre) === 0) hours += Number(fields[k] || 0);
+        const hours = moduleCountValue(week, modules, m);   // logged hours + linked-day sessions
         if (hours > 0) award(m.category, Math.round(hours * m.xpPerHour), m.source);
       } else if (m.type === "composite") {
         if (m.outputs) (m.outputs.items || []).forEach((it) => { if (checks[checklistId(m.outputs.idPrefix, it)]) award(m.category, m.outputs.xpPer, m.source); });
-        if (m.hoursField) { const h = Number(fields[m.hoursField] || 0); if (h > 0) award(m.category, Math.round(h * m.xpPerHour), m.source); }
+        const h = moduleCountValue(week, modules, m);        // project hours + linked-day sessions
+        if (h > 0) award(m.category, Math.round(h * m.xpPerHour), m.source);
       } else if (m.type === "review") {
         let filled = 0;
         (m.fields || []).forEach((f) => { if (fields[f] && String(fields[f]).trim()) filled++; });
         if (m.gradeField && fields[m.gradeField] && fields[m.gradeField] !== "Not graded yet" && String(fields[m.gradeField]).trim()) filled++;
         if (filled > 0) award(m.category, filled * m.xpPer, m.source);
       } else if (m.type === "counter") {
-        const v = Number(fields[counterField(m)] || 0);
+        const v = moduleCountValue(week, modules, m);        // logged + linked-day sessions
         if (v > 0) award(m.category, Math.round(v * (m.xpPer || 0)), m.source);
       } else if (m.type === "notes") {
         const v = fields[notesField(m)];
@@ -348,6 +382,6 @@
   return {
     XP_BY_CAT, ATTR_OF_CAT, CAT_OF_ATTR, ATTR_LIST, ATTR_COLOR, STUDY_HOUR_XP, PROJECT_HOUR_XP, REVIEW_XP, PRESETS, BUILTIN_ORDER,
     DEFAULT_BLUEPRINT, DEFAULT_WORKOUTS, DEFAULT_DIET, DEFAULT_PROJECT_CHECKS, DEFAULT_STUDY_AREAS, DEFAULT_REVIEW,
-    slug, taskId, checklistId, categoryFor, dailyAttr, dailyAttrKey, taskLinkOf, linkTargetId, linkTargets, linkModule, normLink, migrateModules, buildBaseModules, applyOverlays, scoreIds, weekScore, weekXp,
+    slug, taskId, checklistId, categoryFor, dailyAttr, dailyAttrKey, taskLinkOf, linkTargetId, linkTargets, linkModule, normLink, linkConsumesDaily, linkedCountDays, moduleCountValue, migrateModules, buildBaseModules, applyOverlays, scoreIds, weekScore, weekXp,
   };
 });

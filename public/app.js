@@ -93,7 +93,8 @@ function customSectionHtml(m) {
     ).join("") + `</div></div>`;
   } else if (m.type === "counter") {
     const u = m.target && m.target.unit ? escapeHtml(m.target.unit) : "";
-    body = `<div class="content"><div class="metric"><div class="top"><div><div class="metric-title">${escapeHtml(m.name)}</div><p class="hint">Target: ${(m.target && m.target.value) || 1} ${u} · +${m.xpPer} XP each</p></div></div><label class="label" style="margin-top:14px">Logged ${u}</label><input id="${escapeHtml(m.field)}" type="number" min="0" step="any" value="0" data-save></div></div>`;
+    const tgt = (m.target && m.target.value) || 1;
+    body = `<div class="content"><div class="metric"><div class="top"><div><div class="metric-title">${escapeHtml(m.name)}</div><p class="hint">Target: ${tgt} ${u} · +${m.xpPer} XP each</p></div><span class="metric-number"><span class="counter-total" data-counter="${m.id}">0</span>/${tgt}</span></div><div class="bar"><div class="bar-fill" data-counter-bar="${m.id}"></div></div><label class="label" style="margin-top:14px">Logged manually ${u}</label><input id="${escapeHtml(m.field)}" type="number" min="0" step="any" value="0" data-save><p class="hint counter-sessions" data-counter-sessions="${m.id}"></p></div></div>`;
   } else if (m.type === "notes") {
     body = `<div class="content"><textarea id="${escapeHtml(m.field)}" data-save placeholder="${escapeHtml(m.name)}..."></textarea></div>`;
   } else if (m.type === "table") {
@@ -1226,9 +1227,14 @@ function renderDays() {
       const cat = attrCat(attr);
       const xp = (window.Game && Game.xpForCat) ? Game.xpForCat(cat) : 10;
       if (linkMod) {
-        // Attach link (section has no checkbox to share): own checkbox, but the stat
-        // is the section's — show its badge instead of the editable attribute dot.
-        group.insertAdjacentHTML("beforeend", `<label class="check quest"><input id="${id}" type="checkbox" data-cat="${cat}" data-day="${dayIndex}" data-save><span class="q-text">${escapeHtml(task)}</span><span class="link-badge" style="--ac:${attrColor(attr)}" title="Linked to ${escapeHtml(linkMod.name)} — feeds ${escapeHtml(attrName(attr))}"><svg viewBox="0 0 24 24" class="ic"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07L11.5 4.5M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07L10.5 19.5"/></svg>${escapeHtml(linkMod.name)}</span><span class="q-xp">+${xp}</span></label>`);
+        // Linked, no shared checkbox: own checkbox, stat is the section's. count
+        // mode → each completed day is +1 session to the section (engine adds it);
+        // stat mode → just feeds the section's stat. Badge replaces the attr dot.
+        const ref = window.Forge ? Forge.normLink(link) : { mode: "stat" };
+        const isCount = ref.mode === "count";
+        const linkXp = isCount ? (linkMod.type === "counter" ? (linkMod.xpPer || 0) : (linkMod.xpPerHour || 0)) : xp;
+        const title = isCount ? `Each day = +1 to ${linkMod.name} (${attrName(attr)})` : `Linked to ${linkMod.name} — feeds ${attrName(attr)}`;
+        group.insertAdjacentHTML("beforeend", `<label class="check quest"><input id="${id}" type="checkbox" data-cat="${cat}" data-day="${dayIndex}" data-save><span class="q-text">${escapeHtml(task)}</span><span class="link-badge${isCount ? " counts" : ""}" style="--ac:${attrColor(attr)}" title="${escapeHtml(title)}"><svg viewBox="0 0 24 24" class="ic"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07L11.5 4.5M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07L10.5 19.5"/></svg>${escapeHtml(linkMod.name)}${isCount ? " +1" : ""}</span><span class="q-xp">+${linkXp}</span></label>`);
         return;
       }
       group.insertAdjacentHTML("beforeend", `<label class="check quest"><input id="${id}" type="checkbox" data-cat="${cat}" data-day="${dayIndex}" data-save><span class="q-text">${escapeHtml(task)}</span><button class="q-attr" type="button" data-task="${escapeHtml(task)}" data-attr="${attr}" style="--ac:${attrColor(attr)}" title="Trains ${escapeHtml(attrName(attr))} · click to change" aria-label="Attribute: ${escapeHtml(attrName(attr))}"></button><span class="q-xp">+${xp}</span></label>`);
@@ -1311,6 +1317,25 @@ function syncLinkedProxies(wk) {
   wk = wk || getWeekData();
   document.querySelectorAll("input[data-link-id]").forEach((cb) => { cb.checked = !!wk.checks[cb.getAttribute("data-link-id")]; });
 }
+// Reflect linked-day "sessions" in each custom counter section's total/bar/note,
+// so completing a daily task visibly moves the section's number.
+function syncCounterDisplays() {
+  if (!window.Forge || !Forge.moduleCountValue) return;
+  const wk = getWeekData();
+  const mods = getModules();
+  mods.forEach((m) => {
+    if (m.type !== "counter") return;
+    const total = Forge.moduleCountValue(wk, mods, m);
+    const fromDaily = Forge.linkedCountDays(wk, mods, m.id);
+    const tgt = (m.target && m.target.value) || 1;
+    const totalEl = document.querySelector(`.counter-total[data-counter="${m.id}"]`);
+    if (totalEl) totalEl.textContent = total;
+    const bar = document.querySelector(`[data-counter-bar="${m.id}"]`);
+    if (bar) bar.style.width = Math.min(100, Math.round((total / tgt) * 100)) + "%";
+    const sess = document.querySelector(`.counter-sessions[data-counter-sessions="${m.id}"]`);
+    if (sess) sess.textContent = fromDaily > 0 ? `+ ${fromDaily} from linked daily task${fromDaily === 1 ? "" : "s"} → ${total} total this week` : "";
+  });
+}
 
 function saveWeekField(el) {
   const wk = getWeekData();
@@ -1387,6 +1412,7 @@ function updateProgress() {
   setMetric("review", percent(reviewDone, 4));
   renderXpChips();
   syncLinkedProxies();
+  syncCounterDisplays();
   if (typeof renderBoss === "function") renderBoss();
 }
 
@@ -2420,8 +2446,14 @@ async function saveDayTemplate() {
   rows.forEach((r) => {
     if (!window.Forge) return;
     const k = Forge.dailyAttrKey(r.text);
-    settings.taskAttrs[k] = r.attr;
-    if (r.link) settings.taskLinks[k] = r.link; else delete settings.taskLinks[k];
+    if (r.link) {
+      settings.taskLinks[k] = r.link;
+      const lm = Forge.linkModule(r.link, getModules());   // auto-assign the section's stat
+      settings.taskAttrs[k] = (lm && lm.attr) ? lm.attr : r.attr;
+    } else {
+      delete settings.taskLinks[k];
+      settings.taskAttrs[k] = r.attr;
+    }
   });
   await persistSettings();
   closeDayEditor();
