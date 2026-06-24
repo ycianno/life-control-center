@@ -57,19 +57,35 @@
   // settings.taskLinks maps a task slug -> a module id (a `table` section, the
   // only type with a per-day checkbox). The link resolves to that section's row
   // for the given day, so checking either place ticks the same week.checks id.
+  // A link is a ref { m: moduleId, item?: itemText }. A bare string is treated as
+  // { m: string } for backward compatibility with the first (table-only) version.
+  function normLink(link) {
+    if (!link) return null;
+    return (typeof link === "string") ? { m: link } : link;
+  }
   function taskLinkOf(taskLinks, text) {
     if (!taskLinks) return null;
     return taskLinks[dailyAttrKey(text)] || null;
   }
-  function linkTargetId(moduleId, modules, dayIndex) {
-    const m = (modules || []).find((x) => x.id === moduleId);
+  function linkTargetId(link, modules, dayIndex) {
+    const ref = normLink(link); if (!ref) return null;
+    const m = (modules || []).find((x) => x.id === ref.m);
     if (!m) return null;
-    if (m.type === "table") return `${m.idPrefix}-${dayIndex}`;
-    return null; // only per-day (table) sections expose a daily checkbox to share
+    if (m.type === "table") return `${m.idPrefix}-${dayIndex}`;       // per-day row
+    if (m.type === "checklist" && ref.item) return checklistId(m.idPrefix, ref.item); // weekly item
+    return null;
   }
-  function linkableModules(modules) {
-    return (modules || []).filter((m) => m.type === "table");
+  // Everything a daily task can be linked to (must have a shared checkbox).
+  function linkTargets(modules) {
+    const out = [];
+    (modules || []).forEach((m) => {
+      if (m.enabled === false) return;
+      if (m.type === "table") out.push({ ref: { m: m.id }, label: `${m.name} (daily)`, attr: m.attr, kind: "daily" });
+      else if (m.type === "checklist") (m.items || []).forEach((it) => out.push({ ref: { m: m.id, item: it }, label: `${m.name}: ${it} (weekly)`, attr: m.attr, kind: "weekly" }));
+    });
+    return out;
   }
+  function linkModule(link, modules) { const ref = normLink(link); if (!ref) return null; return (modules || []).find((x) => x.id === ref.m) || null; }
 
   // ----- category inference for free-text daily tasks (relocated from app.js) -
   function categoryFor(text) {
@@ -321,6 +337,6 @@
   return {
     XP_BY_CAT, ATTR_OF_CAT, CAT_OF_ATTR, ATTR_LIST, ATTR_COLOR, STUDY_HOUR_XP, PROJECT_HOUR_XP, REVIEW_XP, PRESETS, BUILTIN_ORDER,
     DEFAULT_BLUEPRINT, DEFAULT_WORKOUTS, DEFAULT_DIET, DEFAULT_PROJECT_CHECKS, DEFAULT_STUDY_AREAS, DEFAULT_REVIEW,
-    slug, taskId, checklistId, categoryFor, dailyAttr, dailyAttrKey, taskLinkOf, linkTargetId, linkableModules, migrateModules, buildBaseModules, applyOverlays, scoreIds, weekScore, weekXp,
+    slug, taskId, checklistId, categoryFor, dailyAttr, dailyAttrKey, taskLinkOf, linkTargetId, linkTargets, linkModule, normLink, migrateModules, buildBaseModules, applyOverlays, scoreIds, weekScore, weekXp,
   };
 });

@@ -25,10 +25,13 @@ function normalizeCustomModule(m) {
   cm.category = cm.category || (window.Forge && Forge.CAT_OF_ATTR[cm.attr]) || "discipline";
   if (cm.type === "counter") cm.field = cm.field || `${cm.idPrefix}-count`;
   if (cm.type === "notes") cm.field = cm.field || `${cm.idPrefix}-notes`;
+  if (cm.type === "table" && cm.checkCount == null) cm.checkCount = 7;
   return cm;
 }
 
-// Build a fresh custom-module definition from the Add Section form.
+// Build a fresh custom-module definition from the Add Section form. The "daily"
+// form type produces a per-day `table` module (a checkbox each day) — these are
+// linkable to daily tasks exactly like the built-in Training section.
 function makeCustomModule({ name, type, attr, items, targetValue, unit, xpPer }) {
   const id = "custom-" + (slugify(name).slice(0, 20) || "section") + "-" + Math.random().toString(36).slice(2, 6);
   const cat = (window.Forge && Forge.CAT_OF_ATTR[attr]) || "discipline";
@@ -36,6 +39,7 @@ function makeCustomModule({ name, type, attr, items, targetValue, unit, xpPer })
   if (type === "checklist") { m.items = (items && items.length) ? items : ["First item"]; m.xpPer = Number(xpPer) || 10; }
   else if (type === "counter") { m.field = `${id}-count`; m.target = { kind: /hour|hr|min/i.test(unit || "") ? "hours" : "count", value: Number(targetValue) || 1, unit: unit || "" }; m.xpPer = Number(xpPer) || 5; }
   else if (type === "notes") { m.field = `${id}-notes`; m.xpPer = Number(xpPer) || 10; }
+  else if (type === "daily") { m.type = "table"; m.checkCount = 7; m.xpPer = Number(xpPer) || 15; m.countScore = true; }
   return m;
 }
 
@@ -77,6 +81,7 @@ function customHint(m) {
   if (m.type === "checklist") return `Each item is worth +${m.xpPer} XP.`;
   if (m.type === "counter") { const u = m.target && m.target.unit ? ` ${m.target.unit}` : ""; return `Target: ${(m.target && m.target.value) || 1}${u} per week · +${m.xpPer} XP each.`; }
   if (m.type === "notes") return `Free-form notes · +${m.xpPer} XP when filled.`;
+  if (m.type === "table") return `A checkbox for each day · +${m.xpPer} XP each · linkable to a daily task.`;
   return "";
 }
 function customSectionHtml(m) {
@@ -91,6 +96,14 @@ function customSectionHtml(m) {
     body = `<div class="content"><div class="metric"><div class="top"><div><div class="metric-title">${escapeHtml(m.name)}</div><p class="hint">Target: ${(m.target && m.target.value) || 1} ${u} · +${m.xpPer} XP each</p></div></div><label class="label" style="margin-top:14px">Logged ${u}</label><input id="${escapeHtml(m.field)}" type="number" min="0" step="any" value="0" data-save></div></div>`;
   } else if (m.type === "notes") {
     body = `<div class="content"><textarea id="${escapeHtml(m.field)}" data-save placeholder="${escapeHtml(m.name)}..."></textarea></div>`;
+  } else if (m.type === "table") {
+    const days = (typeof dayNames === "function") ? dayNames() : ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const n = m.checkCount || 7;
+    let rows = "";
+    for (let i = 0; i < n; i++) {
+      rows += `<tr><td>${escapeHtml(days[i] || ("Day " + (i + 1)))}</td><td><label class="check"><input id="${m.idPrefix}-${i}" type="checkbox" data-cat="${escapeHtml(m.category)}" data-save><span>Done <span class="q-xp">+${m.xpPer}</span></span></label></td><td data-label="Notes"><input id="${m.idPrefix}-note-${i}" type="text" placeholder="Notes..." data-save></td></tr>`;
+    }
+    body = `<div class="content"><table><thead><tr><th>Day</th><th>Done</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
   return head + body;
 }
@@ -153,7 +166,8 @@ function renderModulesEditor() {
         <div class="form-row">
           <div class="form-col"><label class="label">Type</label>
             <select id="newModType">
-              <option value="checklist">Checklist</option>
+              <option value="daily">Daily checkbox (one per day · linkable)</option>
+              <option value="checklist">Checklist (weekly items)</option>
               <option value="counter">Counter (number / hours)</option>
               <option value="notes">Notes</option>
             </select></div>
@@ -200,7 +214,7 @@ function sectionEditBodyHtml(m) {
   return `<label class="label">Name</label><input type="text" class="es-name" value="${escapeHtml(m.name)}" maxlength="28" spellcheck="false">
     <div class="form-row">
       <div class="form-col"><label class="label">Feeds stat</label><select class="es-attr">${attrOpts}</select></div>
-      <div class="form-col"><label class="label">XP per ${m.type === "counter" ? "unit" : "item"}</label><input type="number" class="es-xp" min="0" step="1" value="${m.xpPer || 0}"></div>
+      <div class="form-col"><label class="label">XP per ${m.type === "counter" ? "unit" : m.type === "table" ? "day" : "item"}</label><input type="number" class="es-xp" min="0" step="1" value="${m.xpPer || 0}"></div>
     </div>
     ${typeFields}
     <label class="me-score" style="margin-top:12px;"><input type="checkbox" class="es-countscore" ${m.countScore ? "checked" : ""}><span>Count toward weekly score</span></label>`;
@@ -1188,14 +1202,14 @@ function renderDays() {
     const group = card.querySelector(".task-group");
     tasks.forEach((task, taskIndex) => {
       const link = taskLink(task);
-      const linkMod = link ? getModules().find((m) => m.id === link) : null;
+      const linkMod = (link && window.Forge) ? Forge.linkModule(link, getModules()) : null;
       const targetId = (link && window.Forge) ? Forge.linkTargetId(link, getModules(), dayIndex) : null;
       if (linkMod && targetId) {
         // Linked task → a PROXY over the section's per-day checkbox (shared id).
         // No id/data-save/data-cat so it can't double-count; it writes the same
         // week.checks key the section uses. The badge shows where it links.
         const lattr = linkMod.attr;
-        const lxp = (window.Game && Game.xpForCat) ? Game.xpForCat(linkMod.category) : 30;
+        const lxp = (linkMod.type === "checklist") ? (linkMod.xpPer || 10) : ((window.Game && Game.xpForCat) ? Game.xpForCat(linkMod.category) : 30);
         group.insertAdjacentHTML("beforeend", `<label class="check quest linked"><input type="checkbox" data-link-id="${escapeHtml(targetId)}" ${wk.checks[targetId] ? "checked" : ""}><span class="q-text">${escapeHtml(task)}</span><span class="link-badge" style="--ac:${attrColor(lattr)}" title="Linked to ${escapeHtml(linkMod.name)} — one shared check"><svg viewBox="0 0 24 24" class="ic"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07L11.5 4.5M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07L10.5 19.5"/></svg>${escapeHtml(linkMod.name)}</span><span class="q-xp">+${lxp}</span></label>`);
         return;
       }
@@ -2322,11 +2336,12 @@ function renderDayEditorRows(rows) {
   const wrap = document.getElementById("editDayRows");
   if (!wrap) return;
   const attrs = dayEditorAttrs();
-  const links = (window.Forge && Forge.linkableModules) ? Forge.linkableModules(getModules()) : [];
+  const targets = (window.Forge && Forge.linkTargets) ? Forge.linkTargets(getModules()) : [];
   wrap.innerHTML = rows.map((row) => {
     const attr = row.attr || "Discipline";
     const opts = attrs.map((a) => `<option value="${a}" ${a === attr ? "selected" : ""}>${escapeHtml(attrName(a))}</option>`).join("");
-    const linkSel = links.length ? `<select class="de-link" aria-label="Link to section" title="Link to a section so it's one shared checkbox"><option value="">— no link</option>${links.map((m) => `<option value="${m.id}" ${row.link === m.id ? "selected" : ""}>↔ ${escapeHtml(m.name)}</option>`).join("")}</select>` : "";
+    const curLink = row.link && window.Forge ? JSON.stringify(Forge.normLink(row.link)) : "";
+    const linkSel = targets.length ? `<select class="de-link" aria-label="Link to section" title="Link to a section so it's one shared checkbox"><option value="">— no link</option>${targets.map((t) => { const v = JSON.stringify(t.ref); return `<option value="${escapeHtml(v)}" ${v === curLink ? "selected" : ""}>↔ ${escapeHtml(t.label)}</option>`; }).join("")}</select>` : "";
     return `<div class="day-edit-row">
       <div class="de-move">
         <button class="de-up" type="button" aria-label="Move up"><svg viewBox="0 0 24 24" class="ic"><path d="M18 15l-6-6-6 6"/></svg></button>
@@ -2344,7 +2359,7 @@ function dayEditorReadRows() {
   return [...document.querySelectorAll("#editDayRows .day-edit-row")].map((r) => ({
     text: r.querySelector(".de-text").value.trim(),
     attr: r.querySelector(".de-attr").value,
-    link: (r.querySelector(".de-link") ? r.querySelector(".de-link").value : "") || "",
+    link: (() => { const el = r.querySelector(".de-link"); if (!el || !el.value) return ""; try { return JSON.parse(el.value); } catch (e) { return el.value; } })(),
   }));
 }
 function openDayEditor(dayIndex) {
