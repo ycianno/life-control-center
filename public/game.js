@@ -369,8 +369,7 @@
     checkInsignias(p);
     checkStreakMilestones(p);
     renderHeroTrophies(p);
-    renderMissions();
-    renderWeeklyQuests();
+    renderQuests();
     if (typeof checkAutoRecords === "function") checkAutoRecords(p); // auto-milestone Records (app.js)
   }
 
@@ -1069,30 +1068,60 @@
     }
   }
 
-  function renderMissions() {
-    const host = document.getElementById("dailyMissions");
-    if (!host) return;
+  // ----- Unified Quests hub (Daily | Weekly under one card) ------------------
+  // Both systems still bank independently (checkMissions / checkWeeklyQuests);
+  // this only merges their PRESENTATION so the dashboard shows one card, not two
+  // near-identical ones. A small toggle flips between today's missions and this
+  // week's section-aware quests.
+  let questTab = "daily";
+  function questData(tab) {
+    if (tab === "weekly") {
+      const store = (typeof settings !== "undefined" && settings && settings.weeklyQuests) ? settings.weeklyQuests : {};
+      const { quests, key } = weeklyQuests();
+      const rec = store[key] || { m: {}, bonus: 0 };
+      const items = quests.map(q => {
+        const done = q.total > 0 && q.done >= q.total;
+        return { icon: q.icon, label: q.label, done, right: done ? ("+" + q.xp + " XP") : (Math.min(q.done, q.total) + " / " + q.total) };
+      });
+      return { items, doneN: items.filter(i => i.done).length, total: quests.length, bonus: rec.bonus ? ` · +${WQ_BONUS} bonus` : "", empty: "No quests yet — add a pursuit." };
+    }
     const store = (typeof settings !== "undefined" && settings && settings.dailyMissions) ? settings.dailyMissions : {};
     const day = store[iso(new Date())] || { m: {}, bonus: 0 };
     const { missions } = dailyMissions();
-    const doneN = missions.filter(m => m.id in day.m).length;
-    const allDone = missions.length > 0 && doneN >= missions.length;
-    const rows = missions.map(m => {
+    const items = missions.map(m => {
       const done = m.id in day.m;
-      return `<div class="dm-row ${done ? "done" : ""}">
-        <span class="dm-ic"><svg viewBox="0 0 24 24" class="ic"><path d="${done ? IP.check : m.icon}"/></svg></span>
-        <span class="dm-label">${escapeHtml(m.label)}</span>
-        <span class="dm-xp">+${m.xp} XP</span>
-      </div>`;
-    }).join("");
+      return { icon: m.icon, label: m.label, done, right: "+" + m.xp + " XP" };
+    });
+    return { items, doneN: items.filter(i => i.done).length, total: missions.length, bonus: day.bonus ? ` · +${MISSION_BONUS} bonus` : "", empty: "No missions today." };
+  }
+  function renderQuests() {
+    const host = document.getElementById("questsHub");
+    if (!host) return;
+    const d = questData(questTab);
+    const rows = d.items.map(it => `<div class="dm-row ${it.done ? "done" : ""}">
+        <span class="dm-ic"><svg viewBox="0 0 24 24" class="ic"><path d="${it.done ? IP.check : it.icon}"/></svg></span>
+        <span class="dm-label">${escapeHtml(it.label)}</span>
+        <span class="dm-xp">${escapeHtml(it.right)}</span>
+      </div>`).join("");
     host.innerHTML = `
       <div class="dm-head">
-        <span class="dm-title">Daily Missions</span>
-        <span class="dm-count">${doneN} / ${missions.length}${day.bonus ? ` · +${MISSION_BONUS} bonus` : ""}</span>
+        <div class="qh-tabs" role="tablist">
+          <button class="qh-tab ${questTab === "daily" ? "on" : ""}" data-qtab="daily" type="button" role="tab">Daily</button>
+          <button class="qh-tab ${questTab === "weekly" ? "on" : ""}" data-qtab="weekly" type="button" role="tab">Weekly</button>
+        </div>
+        <span class="dm-count">${d.doneN} / ${d.total}${d.bonus}</span>
       </div>
-      <div class="dm-list">${rows}</div>`;
-    host.classList.toggle("all-done", allDone);
+      <div class="dm-list">${rows || `<div class="dm-empty">${escapeHtml(d.empty)}</div>`}</div>`;
+    host.classList.toggle("all-done", d.total > 0 && d.doneN >= d.total);
+    if (!host._wired) {
+      host._wired = true;
+      host.addEventListener("click", e => {
+        const t = e.target.closest("[data-qtab]"); if (!t) return;
+        questTab = t.dataset.qtab; renderQuests();
+      });
+    }
   }
+  function renderMissions() { renderQuests(); }   // back-compat alias
 
   // ===========================================================================
   // WEEKLY QUESTS — 3 section-aware challenges generated from the user's OWN
@@ -1196,34 +1225,10 @@
       if (typeof persistSettings === "function") persistSettings();
     }
   }
-  function renderWeeklyQuests() {
-    const host = document.getElementById("weeklyQuests");
-    if (!host) return;
-    const store = (typeof settings !== "undefined" && settings && settings.weeklyQuests) ? settings.weeklyQuests : {};
-    const { quests, key } = weeklyQuests();
-    const rec = store[key] || { m: {}, bonus: 0 };
-    if (!quests.length) { host.innerHTML = ""; host.classList.remove("all-done"); return; }
-    const doneN = quests.filter(q => q.total > 0 && q.done >= q.total).length;
-    const allDone = doneN >= quests.length;
-    const rows = quests.map(q => {
-      const done = q.total > 0 && q.done >= q.total;
-      return `<div class="dm-row ${done ? "done" : ""}">
-        <span class="dm-ic"><svg viewBox="0 0 24 24" class="ic"><path d="${done ? IP.check : q.icon}"/></svg></span>
-        <span class="dm-label">${escapeHtml(q.label)}</span>
-        <span class="dm-xp">${done ? "+" + q.xp + " XP" : Math.min(q.done, q.total) + " / " + q.total}</span>
-      </div>`;
-    }).join("");
-    host.innerHTML = `
-      <div class="dm-head">
-        <span class="dm-title">Weekly Quests</span>
-        <span class="dm-count">${doneN} / ${quests.length}${rec.bonus ? ` · +${WQ_BONUS} bonus` : ""}</span>
-      </div>
-      <div class="dm-list">${rows}</div>`;
-    host.classList.toggle("all-done", allDone);
-  }
+  function renderWeeklyQuests() { renderQuests(); }   // back-compat alias
 
   // XP earned in a single week (for the trends view)
   function weekXp(week) { return addWeekXp(week, {}); }
 
-  window.Game = { render, computeProfile, levelFromXp, xpForLevel, rankFor, checkXp, xpForCat, attrColorForCat, renderInsignias, renderCabinet, renderHeroTrophies, renderMissions, renderWeeklyQuests, heroClass, weekXp, weekXpBySource, calcWeekScore: (w) => (typeof calculateWeekScoreData === "function" ? calculateWeekScoreData(w) : 0) };
+  window.Game = { render, computeProfile, levelFromXp, xpForLevel, rankFor, checkXp, xpForCat, attrColorForCat, renderInsignias, renderCabinet, renderHeroTrophies, renderMissions, renderWeeklyQuests, renderQuests, heroClass, weekXp, weekXpBySource, calcWeekScore: (w) => (typeof calculateWeekScoreData === "function" ? calculateWeekScoreData(w) : 0) };
 })();

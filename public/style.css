@@ -1957,6 +1957,13 @@ input[type="file"] { display: none; }
 .dm-title { font-size: 12px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .dm-count { font-size: 12px; font-weight: 800; color: var(--text-dim); }
 .daily-missions.all-done .dm-count { color: #34d399; }
+/* Quests hub: segmented Daily | Weekly toggle in the card header */
+.quests-hub .dm-head { align-items: center; }
+.qh-tabs { display: inline-flex; gap: 2px; padding: 3px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 99px; }
+.qh-tab { padding: 4px 13px; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: transparent; border: none; border-radius: 99px; cursor: pointer; transition: color 0.15s ease, background 0.15s ease; }
+.qh-tab:hover { color: var(--text-dim); background: rgba(255,255,255,0.06); transform: none; box-shadow: none; }
+.qh-tab.on { color: #04140c; background: var(--accent-secondary, #34d399); }
+.dm-empty { font-size: 12px; color: var(--muted); padding: 8px 2px; }
 .dm-list { display: flex; flex-direction: column; gap: 6px; }
 .dm-row {
   display: flex; align-items: center; gap: 10px;
