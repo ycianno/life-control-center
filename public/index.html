@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#040406" />
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=46" />
+  <link rel="stylesheet" href="style.css?v=47" />
 </head>
 <body>
   <main class="shell">
@@ -148,6 +148,7 @@
           <button id="prevWeekBtn"><svg viewBox="0 0 24 24" class="ic"><path d="M15 18l-6-6 6-6"/></svg>Prev</button>
           <button id="nextWeekBtn">Next<svg viewBox="0 0 24 24" class="ic"><path d="M9 18l6-6-6-6"/></svg></button>
           <span class="week-range-tag"><span id="weekRangeText">—</span> · <span id="todayText">—</span></span>
+          <button id="openSeasonBtn"><svg viewBox="0 0 24 24" class="ic"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Season</button>
           <button id="shareCardBtn"><svg viewBox="0 0 24 24" class="ic"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share Card</button>
         </div>
 
@@ -616,6 +617,29 @@
       </div>
     </div>
 
+    <!-- Season Modal -->
+    <div class="modal-backdrop" id="seasonModal" aria-hidden="true">
+      <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="seasonTitle" style="max-width: 620px;">
+        <div class="modal-head">
+          <div class="modal-title-wrap">
+            <span class="modal-ico" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+            <h3 id="seasonTitle">Season</h3>
+          </div>
+          <button class="modal-close" id="seasonClose" type="button" aria-label="Close"><svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="season-nav">
+          <button id="seasonPrev" type="button" aria-label="Previous month"><svg viewBox="0 0 24 24" class="ic"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="season-label" id="seasonLabel">—</span>
+          <button id="seasonNext" type="button" aria-label="Next month"><svg viewBox="0 0 24 24" class="ic"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+        <div id="seasonBody"></div>
+        <div class="modal-actions">
+          <button id="seasonShareBtn" type="button"><svg viewBox="0 0 24 24" class="ic"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share recap</button>
+          <button id="seasonCloseBtn" type="button" class="primary">Close</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Focus Timer Modal -->
     <div class="modal-backdrop" id="focusModal" aria-hidden="true">
       <div class="modal glass" role="dialog" aria-modal="true" style="max-width: 420px;">
@@ -674,9 +698,9 @@
   </main>
 
   <script src="modules.js?v=9"></script>
-  <script src="game.js?v=20"></script>
+  <script src="game.js?v=21"></script>
   <script src="fx.js?v=9"></script>
-  <script src="app.js?v=45"></script>
-  <script src="extras.js?v=1"></script>
+  <script src="app.js?v=46"></script>
+  <script src="extras.js?v=2"></script>
 </body>
 </html>

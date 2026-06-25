@@ -2579,6 +2579,32 @@ input[type="time"], input[type="date"] { color-scheme: dark; }
 .tr-spark-chart { flex: 1; min-width: 0; height: 32px; display: flex; }
 .tr-spark-svg { width: 100%; height: 32px; }
 .tr-spark-lvl { flex: 0 0 auto; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 12px; color: var(--muted); min-width: 40px; text-align: right; }
+/* ----- Season modal ----- */
+.season-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 4px 0 18px; }
+.season-nav button { padding: 6px; width: 34px; height: 34px; }
+.season-nav button:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+.season-label { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; min-width: 190px; text-align: center; }
+.season-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
+.season-stat { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--line); }
+.ss-v { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 22px; line-height: 1.1; }
+.ss-k { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.season-goals-head { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.season-goals { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.season-goal { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-left: 3px solid var(--accent-secondary, #34d399); }
+.season-goal.done { border-left-color: #34d399; }
+.sg-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.sg-label { font-size: 13px; font-weight: 600; }
+.sg-del { padding: 0; width: 24px; height: 24px; background: transparent; border: none; color: var(--muted); }
+.sg-del .ic { width: 15px; height: 15px; }
+.sg-del:hover { color: #fca5a5; transform: none; box-shadow: none; background: transparent; }
+.sg-bar { height: 7px; border-radius: 99px; background: rgba(0,0,0,0.4); overflow: hidden; }
+.sg-fill { display: block; height: 100%; border-radius: 99px; background: var(--accent-secondary, #34d399); }
+.season-goal.done .sg-fill { background: #34d399; }
+.sg-meta { font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 6px; }
+.season-empty { font-size: 13px; color: var(--muted); padding: 10px 2px; }
+.season-add { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.season-add select, .season-add input { padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: var(--text); font-size: 13px; font-family: inherit; }
+.season-add input { width: 90px; }
 
 /* Carbon — graphite mono / minimal */
 [data-theme="carbon"] {

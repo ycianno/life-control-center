@@ -1878,6 +1878,85 @@ function renderBoss() {
   }
 }
 
+// ===== SEASONS (monthly goals + shareable recap) =====
+// A season = a calendar month. Goals are recurring definitions in
+// settings.seasonGoals, evaluated live against the viewed month's summary
+// (Game.seasonSummary). The recap canvas lives in extras.js (shareSeasonCard).
+let seasonOffset = 0; // months back from the current month (0 = this month)
+const SEASON_GOAL_TYPES = {
+  xp:     { label: "Earn XP",            needsAttr: false, def: 2000 },
+  weeks:  { label: "Active weeks",       needsAttr: false, def: 4 },
+  attr:   { label: "Reach attribute Lv", needsAttr: true,  def: 5 },
+  streak: { label: "Day streak",         needsAttr: false, def: 14 },
+};
+function seasonMonthStart() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth() - seasonOffset, 1); }
+function curSeasonSummary() { return (window.Game && Game.seasonSummary) ? Game.seasonSummary(seasonMonthStart()) : null; }
+function seasonGoalProgress(g, s, prof) {
+  if (g.type === "weeks")  return { cur: s.weeksActive, target: g.target, label: `Stay active ${g.target} weeks` };
+  if (g.type === "streak") return { cur: prof ? prof.dayStreak : 0, target: g.target, label: `Reach a ${g.target}-day streak` };
+  if (g.type === "attr")   { const a = prof ? prof.attrs.find(x => x.key === g.attr) : null; return { cur: a ? a.level : 0, target: g.target, label: `${attrName(g.attr)} to Lv ${g.target}` }; }
+  return { cur: s.xp, target: g.target, label: `Earn ${Number(g.target).toLocaleString()} XP` };
+}
+function renderSeason() {
+  const s = curSeasonSummary(); if (!s) return;
+  const prof = (window.Game && Game.computeProfile) ? Game.computeProfile() : null;
+  const lbl = document.getElementById("seasonLabel"); if (lbl) lbl.textContent = s.label + (s.isCurrent ? " · live" : "");
+  const next = document.getElementById("seasonNext"); if (next) next.disabled = seasonOffset <= 0;
+  const body = document.getElementById("seasonBody"); if (!body) return;
+  const topName = s.topAttr ? attrName(s.topAttr) : "—";
+  const topColor = s.topAttr ? attrColor(s.topAttr) : "var(--muted)";
+  const stats = [
+    { v: s.xp.toLocaleString(), k: "XP earned" },
+    { v: `<span style="color:${topColor}">${escapeHtml(topName)}</span>`, k: "Top attribute" },
+    { v: s.weeksActive, k: "Active weeks" },
+    { v: s.bestWeek + "%", k: "Best week" },
+    { v: s.trophies, k: "Trophies" },
+    { v: s.insignias, k: "Insignias" },
+  ];
+  const statsHtml = `<div class="season-stats">${stats.map(x => `<div class="season-stat"><span class="ss-v">${x.v}</span><span class="ss-k">${x.k}</span></div>`).join("")}</div>`;
+  const goals = settings.seasonGoals || [];
+  const goalsHtml = goals.map(g => {
+    const p = seasonGoalProgress(g, s, prof);
+    const pct = p.target > 0 ? Math.min(100, Math.round(p.cur / p.target * 100)) : 0;
+    const done = p.target > 0 && p.cur >= p.target;
+    return `<div class="season-goal ${done ? "done" : ""}">
+      <div class="sg-top"><span class="sg-label">${escapeHtml(p.label)}</span><button class="sg-del" data-goal="${g.id}" type="button" aria-label="Remove goal"><svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="sg-bar"><span class="sg-fill" style="width:${pct}%"></span></div>
+      <div class="sg-meta">${Number(p.cur).toLocaleString()} / ${Number(p.target).toLocaleString()}${done ? " · done ✓" : ""}</div>
+    </div>`;
+  }).join("") || `<div class="season-empty">No goals yet — set one below.</div>`;
+  const attrOpts = (prof ? prof.attrs : []).map(a => `<option value="${a.key}">${escapeHtml(a.label || a.key)}</option>`).join("");
+  const addHtml = `<div class="season-add">
+    <select id="sgType">${Object.keys(SEASON_GOAL_TYPES).map(t => `<option value="${t}">${SEASON_GOAL_TYPES[t].label}</option>`).join("")}</select>
+    <select id="sgAttr" style="display:none">${attrOpts}</select>
+    <input id="sgTarget" type="number" min="1" value="2000" aria-label="Target">
+    <button id="sgAdd" type="button" class="primary">Add</button>
+  </div>`;
+  body.innerHTML = statsHtml + `<div class="season-goals-head">Season Goals</div><div class="season-goals">${goalsHtml}</div>` + addHtml;
+  const typeSel = document.getElementById("sgType"), attrSel = document.getElementById("sgAttr"), tgtInp = document.getElementById("sgTarget");
+  if (typeSel) {
+    const sync = () => { if (attrSel) attrSel.style.display = SEASON_GOAL_TYPES[typeSel.value].needsAttr ? "" : "none"; };
+    typeSel.onchange = () => { sync(); if (tgtInp) tgtInp.value = SEASON_GOAL_TYPES[typeSel.value].def; };
+    sync();
+  }
+}
+function openSeason() { seasonOffset = 0; renderSeason(); const md = document.getElementById("seasonModal"); if (md) { md.classList.add("active"); md.setAttribute("aria-hidden", "false"); } }
+function closeSeason() { const md = document.getElementById("seasonModal"); if (md) { md.classList.remove("active"); md.setAttribute("aria-hidden", "true"); } }
+function addSeasonGoalFromForm() {
+  const type = (document.getElementById("sgType") || {}).value || "xp";
+  const target = Math.max(1, Number((document.getElementById("sgTarget") || {}).value) || 1);
+  const g = { id: "g" + Date.now().toString(36), type, target };
+  if (SEASON_GOAL_TYPES[type] && SEASON_GOAL_TYPES[type].needsAttr) g.attr = (document.getElementById("sgAttr") || {}).value || null;
+  settings.seasonGoals = (settings.seasonGoals || []).concat([g]);
+  persistSettings();
+  renderSeason();
+}
+function removeSeasonGoal(id) {
+  settings.seasonGoals = (settings.seasonGoals || []).filter(g => g.id !== id);
+  persistSettings();
+  renderSeason();
+}
+
 // ===== FOCUS TIMER =====
 let focusState = null;
 function openFocus() {
@@ -2415,7 +2494,30 @@ function bindEvents() {
   };
   const closeReportBtn = document.getElementById("closeReportBtn");
   if (closeReportBtn) closeReportBtn.onclick = () => document.getElementById("reportsModal").classList.remove("active");
-  
+
+  // ----- Season modal -----
+  const openSeasonBtn = document.getElementById("openSeasonBtn");
+  if (openSeasonBtn) openSeasonBtn.onclick = openSeason;
+  const seasonClose = document.getElementById("seasonClose");
+  if (seasonClose) seasonClose.onclick = closeSeason;
+  const seasonCloseBtn = document.getElementById("seasonCloseBtn");
+  if (seasonCloseBtn) seasonCloseBtn.onclick = closeSeason;
+  const seasonPrev = document.getElementById("seasonPrev");
+  if (seasonPrev) seasonPrev.onclick = () => { if (seasonOffset < 120) seasonOffset++; renderSeason(); };
+  const seasonNext = document.getElementById("seasonNext");
+  if (seasonNext) seasonNext.onclick = () => { if (seasonOffset > 0) seasonOffset--; renderSeason(); };
+  const seasonShareBtn = document.getElementById("seasonShareBtn");
+  if (seasonShareBtn) seasonShareBtn.onclick = () => { if (window.shareSeasonCard) window.shareSeasonCard(curSeasonSummary()); };
+  const seasonModal = document.getElementById("seasonModal");
+  if (seasonModal) {
+    seasonModal.addEventListener("click", (e) => {
+      if (e.target === seasonModal) return closeSeason();
+      const del = e.target.closest && e.target.closest(".sg-del");
+      if (del) return removeSeasonGoal(del.getAttribute("data-goal"));
+      if (e.target.id === "sgAdd") return addSeasonGoalFromForm();
+    });
+  }
+
   const genReport = (weeksBack) => {
     let currentWeekStart = getStartOfWeek(new Date());
     let totalScore = 0;

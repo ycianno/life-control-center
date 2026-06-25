@@ -264,6 +264,81 @@
     downloadCanvas(canvas);
   }
 
+  // ---- season recap card (shareable image of one month) ----
+  function goalCur(go, s, prof) {
+    if (go.type === "weeks") return s.weeksActive;
+    if (go.type === "streak") return prof ? prof.dayStreak : 0;
+    if (go.type === "attr") { var a = prof ? prof.attrs.find(function (x) { return x.key === go.attr; }) : null; return a ? a.level : 0; }
+    return s.xp;
+  }
+  function drawSeasonCard(s) {
+    if (!s) return null;
+    var prof = (window.Game && typeof window.Game.computeProfile === "function") ? window.Game.computeProfile() : null;
+    var callsign = (typeof settings !== "undefined" && settings && settings.callsign) ? settings.callsign : "Player One";
+    var accent = cssVar("--accent-primary", "#8b5cf6"), accent2 = cssVar("--accent-secondary", "#38bdf8");
+    var textc = cssVar("--text", "#f5f5f7"), dim = cssVar("--text-dim", "#9ca3af");
+    var topColor = accent2, topName = s.topAttr || "—";
+    if (prof && s.topAttr) { var ta = prof.attrs.find(function (a) { return a.key === s.topAttr; }); if (ta) { topColor = ta.color || accent2; topName = ta.label || ta.key; } }
+
+    var W = 1200, H = 630, SC = 2;
+    var c = document.createElement("canvas"); c.width = W * SC; c.height = H * SC;
+    var ctx = c.getContext("2d"); ctx.scale(SC, SC);
+    var g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#0b0b12"); g.addColorStop(1, "#050509"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    var rg = ctx.createRadialGradient(W - 180, 120, 40, W - 180, 120, 560); rg.addColorStop(0, hexA(accent, 0.18)); rg.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    var FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+    ctx.fillStyle = accent; ctx.font = "700 22px " + FONT; ctx.fillText("⚒  THE FORGE — SEASON RECAP", 64, 80);
+    ctx.fillStyle = textc; ctx.font = "800 64px " + FONT; ctx.fillText(trim(ctx, s.label, 760), 64, 156);
+    ctx.fillStyle = dim; ctx.font = "500 26px " + FONT; ctx.fillText(callsign + (prof ? "   ·   Lv " + prof.level : ""), 64, 198);
+
+    var goals = (typeof settings !== "undefined" && settings && settings.seasonGoals) ? settings.seasonGoals : [];
+    var gdone = 0; goals.forEach(function (go) { if (go.target > 0 && goalCur(go, s, prof) >= go.target) gdone++; });
+
+    var tiles = [
+      { v: Number(s.xp).toLocaleString(), k: "XP earned", c: accent },
+      { v: cap(topName), k: "Top attribute", c: topColor },
+      { v: String(s.weeksActive), k: "Active weeks", c: textc },
+      { v: s.bestWeek + "%", k: "Best week", c: textc },
+      { v: String(s.trophies), k: "Trophies", c: "#fbbf24" },
+      { v: String(s.insignias), k: "Insignias", c: accent2 },
+    ];
+    var gx = 64, gy = 252, gw = W - 128, cols = 3, gap = 20, tw = (gw - gap * (cols - 1)) / cols, th = 128;
+    tiles.forEach(function (t, i) {
+      var x = gx + (i % cols) * (tw + gap), y = gy + Math.floor(i / cols) * (th + gap);
+      roundRect(ctx, x, y, tw, th, 18); ctx.fillStyle = "rgba(255,255,255,0.04)"; ctx.fill();
+      roundRect(ctx, x, y, tw, th, 18); ctx.lineWidth = 1; ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.stroke();
+      ctx.fillStyle = t.c; ctx.font = "800 46px " + FONT; ctx.fillText(trim(ctx, String(t.v), tw - 44), x + 24, y + 70);
+      ctx.fillStyle = dim; ctx.font = "600 20px " + FONT; ctx.fillText(t.k, x + 24, y + 102);
+    });
+    ctx.fillStyle = dim; ctx.font = "500 18px " + FONT; ctx.textAlign = "left";
+    if (goals.length) ctx.fillText("Goals achieved: " + gdone + " / " + goals.length, 64, H - 40);
+    ctx.textAlign = "right"; ctx.fillText("github.com/ycianno/the-forge", W - 64, H - 40); ctx.textAlign = "left";
+    return c;
+
+    function cap(x) { return String(x).charAt(0).toUpperCase() + String(x).slice(1); }
+    function trim(ctx, str, max) { str = String(str); while (ctx.measureText(str).width > max && str.length > 1) str = str.slice(0, -1); return str; }
+  }
+  function downloadSeason(canvas) {
+    var a = document.createElement("a"); a.href = canvas.toDataURL("image/png"); a.download = "forge-season.png";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  function shareSeasonCard(s) {
+    var canvas = drawSeasonCard(s);
+    if (!canvas) { alert("Season data isn't ready yet."); return; }
+    if (navigator.canShare && typeof navigator.share === "function") {
+      canvas.toBlob(function (blob) {
+        if (!blob) return downloadSeason(canvas);
+        var file = new File([blob], "forge-season.png", { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: "The Forge", text: "My Forge season recap." }).catch(function () { downloadSeason(canvas); });
+        } else { downloadSeason(canvas); }
+      }, "image/png");
+      return;
+    }
+    downloadSeason(canvas);
+  }
+  window.shareSeasonCard = shareSeasonCard;
+
   // ---- wire up ----
   function wire() {
     var sb = document.getElementById("loadSampleBtn"); if (sb) sb.onclick = loadSampleData;

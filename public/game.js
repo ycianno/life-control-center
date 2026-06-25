@@ -121,6 +121,52 @@
     return at;
   }
 
+  // ----- Seasons: aggregate one calendar month into a recap. -----------------
+  // A "season" = a calendar month. Weeks are bucketed by their start date; XP,
+  // per-attribute XP, best week, and trophies/insignias earned in the month are
+  // summed. Drives the Season modal + the shareable recap card.
+  function seasonSummary(monthStart) {
+    const base = monthStart || new Date();
+    const mStart = new Date(base.getFullYear(), base.getMonth(), 1);
+    const mEnd = new Date(base.getFullYear(), base.getMonth() + 1, 1);
+    const inMonth = (d) => d && d >= mStart && d < mEnd;
+    const weeks = (typeof database !== "undefined" && database && database.weeks) ? database.weeks : {};
+    const mods = modulesNow();
+    let xp = 0, weeksActive = 0, bestWeek = 0;
+    const byAttr = {};
+    for (const key in weeks) {
+      const ws = (typeof parseYmd === "function") ? parseYmd(key) : null;
+      if (!inMonth(ws)) continue;
+      const wk = weeks[key];
+      let r = { xp: 0, byAttr: {} };
+      try { r = window.Forge ? Forge.weekXp(wk, mods) : r; } catch (e) {}
+      if (r.xp > 0) weeksActive++;
+      xp += r.xp;
+      for (const a in r.byAttr) byAttr[a] = (byAttr[a] || 0) + r.byAttr[a];
+      let pct = 0; try { pct = (typeof calculateWeekScoreData === "function") ? calculateWeekScoreData(wk) : 0; } catch (e) {}
+      if (pct > bestWeek) bestWeek = pct;
+    }
+    // Mission + weekly-quest bonus tokens earned within the month
+    const dm = (typeof settings !== "undefined" && settings && settings.dailyMissions) ? settings.dailyMissions : {};
+    for (const k in dm) { if (inMonth(parseYmd(k))) xp += allDayXp(dm[k]); }
+    const wq = (typeof settings !== "undefined" && settings && settings.weeklyQuests) ? settings.weeklyQuests : {};
+    for (const k in wq) { if (inMonth(parseYmd(k))) xp += allDayXp(wq[k]); }
+    // Top attribute by XP this season
+    let topAttr = null, topVal = -1;
+    for (const a in byAttr) if (byAttr[a] > topVal) { topVal = byAttr[a]; topAttr = a; }
+    // Trophies + insignias whose earned timestamp falls in the month
+    let trophies = 0;
+    const T = (typeof settings !== "undefined" && settings && settings.trophies) ? settings.trophies : {};
+    ["bronze", "silver", "gold", "platinum"].forEach(g => { const o = T[g] || {}; for (const k in o) { if (inMonth(parseYmd(String(o[k]).slice(0, 10)))) trophies++; } });
+    let insignias = 0;
+    const I = (typeof settings !== "undefined" && settings && settings.insignias) ? settings.insignias : {};
+    for (const k in I) { if (inMonth(parseYmd(String(I[k]).slice(0, 10)))) insignias++; }
+    const label = mStart.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    const now = new Date();
+    const isCurrent = mStart.getFullYear() === now.getFullYear() && mStart.getMonth() === now.getMonth();
+    return { label, monthStart: mStart, xp, byAttr, topAttr, topAttrXp: Math.max(0, topVal), weeksActive, bestWeek, trophies, insignias, isCurrent };
+  }
+
   // Per-week progress for ONE custom pursuit: did the user touch it (active) and
   // did they meet its weekly target (hit)? Type-aware, unit-independent — so a
   // "Pages" counter and a "Reading" checklist both reduce to active/hit weeks.
@@ -1236,5 +1282,5 @@
   // XP earned in a single week (for the trends view)
   function weekXp(week) { return addWeekXp(week, {}); }
 
-  window.Game = { render, computeProfile, levelFromXp, xpForLevel, rankFor, checkXp, xpForCat, attrColorForCat, renderInsignias, renderCabinet, renderHeroTrophies, renderMissions, renderWeeklyQuests, renderQuests, heroClass, weekXp, weekXpBySource, weekXpByAttr, calcWeekScore: (w) => (typeof calculateWeekScoreData === "function" ? calculateWeekScoreData(w) : 0) };
+  window.Game = { render, computeProfile, levelFromXp, xpForLevel, rankFor, checkXp, xpForCat, attrColorForCat, renderInsignias, renderCabinet, renderHeroTrophies, renderMissions, renderWeeklyQuests, renderQuests, heroClass, weekXp, weekXpBySource, weekXpByAttr, seasonSummary, calcWeekScore: (w) => (typeof calculateWeekScoreData === "function" ? calculateWeekScoreData(w) : 0) };
 })();
