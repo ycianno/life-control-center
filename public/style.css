@@ -336,6 +336,7 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: clip; /* never let a stray-wide child create page-wide horizontal scroll */
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
     radial-gradient(circle at 10% 0%, var(--body-gradient-1), transparent 35%),
@@ -1074,7 +1075,7 @@ tr:hover td { background: rgba(255,255,255,0.04); }
 .heatmap-bare { margin-top: 24px; padding: 20px; border-radius: 20px; background: rgba(20, 20, 25, 0.5); border: 1px solid var(--line); }
 .heatmap-bare-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
 .heatmap-bare-header h2 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
-.heatmap-scroll { width: 100%; padding-bottom: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.heatmap-scroll { width: 100%; padding-bottom: 8px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .heatmap-scroll::-webkit-scrollbar { display: none; }
 .heatmap-grid { display: flex; gap: 5px; width: max-content; margin: 0 auto; }
 .heatmap-cell { min-width: 18px; min-height: 18px; max-width: 18px; max-height: 18px; border-radius: 4px; background: rgba(255,255,255,0.05); transition: transform 0.15s, box-shadow 0.2s; cursor: pointer; position: relative; }
@@ -1407,8 +1408,13 @@ input[type="file"] { display: none; }
   .shell { padding-bottom: 100px; padding-left: 12px; padding-right: 12px; padding-top: calc(8px + env(safe-area-inset-top, 0px)); }
   
   /* Modals on mobile */
-  .modal { padding: 20px; border-radius: 20px; }
+  .modal { padding: 20px; border-radius: 20px; overflow-x: hidden; }
   .modal-actions button { width: 100%; justify-content: center; }
+  /* Settings tabs wrap instead of overflowing the modal horizontally */
+  .settings-tabs { flex-wrap: wrap; }
+  .settings-tab { flex: 1 1 auto; min-width: 72px; }
+  /* Season / Year stat grids: never force a wider-than-screen row */
+  .season-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   
   /* Section headers smaller */
   .summary-left h2 { font-size: 20px; }
@@ -1571,7 +1577,7 @@ input[type="file"] { display: none; }
 .xp-legend .muted { color: var(--muted); font-weight: 600; }
 
 /* --- stat strip --- */
-.char-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.char-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .cstat {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 14px 10px;
@@ -2133,7 +2139,7 @@ input[type="file"] { display: none; }
 
 /* Sections (modules) editor — Settings → Sections */
 .modules-editor { display: flex; flex-direction: column; gap: 8px; }
-.mod-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(255,255,255,0.03); }
+.mod-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
 .mod-reorder { display: flex; flex-direction: column; gap: 2px; }
 .mod-reorder button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 18px; padding: 0; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); cursor: pointer; }
 .mod-reorder button:hover:not([disabled]) { background: rgba(255,255,255,0.12); }
@@ -2387,7 +2393,7 @@ input[type="file"] { display: none; }
 }
 .ht-open .ic { width: 14px; height: 14px; }
 .ht-open:hover { color: var(--text); border-color: var(--line-strong); }
-.ht-tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.ht-tiers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .ht-tier {
   display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; gap: 2px 8px;
   align-items: center; padding: 10px; border-radius: 14px;
@@ -2410,7 +2416,7 @@ input[type="file"] { display: none; }
   background: color-mix(in srgb, var(--bc) 12%, transparent);
 }
 @media (max-width: 768px) {
-  .ht-tiers { grid-template-columns: repeat(2, 1fr); }
+  .ht-tiers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Activity section (relocated heatmap, now full-size below the dashboard) */
