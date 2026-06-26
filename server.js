@@ -177,15 +177,37 @@ const requireAuth = (req, res, next) => {
   }
 };
 
+// The shell HTML must always revalidate, or clients stay pinned to a stale
+// index that references old asset versions (the cause of "fixes don't show").
+const noHtmlCache = (res) => res.set('Cache-Control', 'no-cache, must-revalidate');
 app.get('/', requireAuth, (req, res) => {
+  noHtmlCache(res);
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 app.get('/index.html', requireAuth, (req, res) => {
+  noHtmlCache(res);
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// The service worker must NEVER be cached (Cloudflare/browser) — a stale sw.js
+// keeps the whole app pinned to old cached assets. no-store keeps it off every
+// cache layer so deploys propagate immediately.
+app.get('/sw.js', (req, res) => {
+  res.set('Cache-Control', 'no-store, must-revalidate');
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+
 app.use('/api/', requireAuth);
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    // HTML (e.g. login.html) revalidates; manifest stays fresh. Versioned
+    // ?v= assets (css/js/png) keep the default and are busted on each deploy.
+    if (filePath.endsWith('.html') || filePath.endsWith('manifest.json')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  },
+}));
 
 // API Endpoints
 app.get('/api/database', (req, res) => {

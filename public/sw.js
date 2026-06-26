@@ -3,8 +3,15 @@
  * redirects are respected), offline shell fallback. API is never cached —
  * app.js already falls back to localStorage when offline.
  */
-const CACHE = 'forge-v48';
+const CACHE = 'forge-v49';
 const SHELL = '/index.html';
+const OFFLINE_HTML =
+  '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  '<title>The Forge</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#050509;color:#e5e7eb;font-family:system-ui,sans-serif;text-align:center;padding:24px">' +
+  '<div><h1 style="font-weight:800">Offline</h1><p style="color:#9ca3af">Reconnect, then reload.</p>' +
+  '<button onclick="location.reload()" style="margin-top:12px;padding:10px 18px;border-radius:99px;border:1px solid #333;background:#111;color:#fff;font-weight:700">Reload</button></div>';
+const shellFallback = () =>
+  caches.match(SHELL).then((r) => r || new Response(OFFLINE_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }));
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -33,7 +40,9 @@ self.addEventListener('fetch', (e) => {
           }
           return res;
         })
-        .catch(() => caches.match(SHELL))
+        // Never respond with undefined (that renders a broken page) — fall back
+        // to the cached shell, or a minimal offline page if nothing is cached.
+        .catch(shellFallback)
     );
     return;
   }
