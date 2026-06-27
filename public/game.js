@@ -1146,6 +1146,10 @@
   // bonus XP shows the same render tick. Silent on the very first ever run.
   function checkMissions() {
     if (typeof settings === "undefined" || !settings) return;
+    // Feature off: stop banking NEW mission XP. Already-earned tokens in
+    // settings.dailyMissions are intentionally left untouched so lifetime XP
+    // (and any unlocked insignias) never silently drop.
+    if (settings.missionsOff) return;
     const first = !settings.dailyMissions;
     const store = settings.dailyMissions || {};
     const key = iso(new Date());
@@ -1200,16 +1204,19 @@
   function renderQuests() {
     const host = document.getElementById("questsHub");
     if (!host) return;
+    const missionsOff = !!(typeof settings !== "undefined" && settings && settings.missionsOff);
+    if (missionsOff && questTab === "daily") questTab = "weekly"; // Daily tab is hidden when off
     const d = questData(questTab);
     const rows = d.items.map(it => `<div class="dm-row ${it.done ? "done" : ""}">
         <span class="dm-ic"><svg viewBox="0 0 24 24" class="ic"><path d="${it.done ? IP.check : it.icon}"/></svg></span>
         <span class="dm-label">${escapeHtml(it.label)}</span>
         <span class="dm-xp">${escapeHtml(it.right)}</span>
       </div>`).join("");
+    const dailyTab = missionsOff ? "" : `<button class="qh-tab ${questTab === "daily" ? "on" : ""}" data-qtab="daily" type="button" role="tab">Daily</button>`;
     host.innerHTML = `
       <div class="dm-head">
         <div class="qh-tabs" role="tablist">
-          <button class="qh-tab ${questTab === "daily" ? "on" : ""}" data-qtab="daily" type="button" role="tab">Daily</button>
+          ${dailyTab}
           <button class="qh-tab ${questTab === "weekly" ? "on" : ""}" data-qtab="weekly" type="button" role="tab">Weekly</button>
         </div>
         <span class="dm-count">${d.doneN} / ${d.total}${d.bonus}</span>

@@ -1798,6 +1798,7 @@ function openSettings() {
   const sf = document.getElementById("cfgStreakFreeze"); if (sf) sf.value = (settings.streakFreeze != null ? settings.streakFreeze : 1);
   const bd = document.getElementById("cfgBossDifficulty"); if (bd) bd.value = settings.bossDifficulty || "normal";
   const nf = document.getElementById("cfgNemesisFreq"); if (nf) nf.value = settings.nemesisFreq || "biannual";
+  const dm2 = document.getElementById("cfgMissions"); if (dm2) dm2.checked = !settings.missionsOff;
   const snd = document.getElementById("cfgSound"); if (snd) snd.checked = !(window.FX && FX.sfxOn) || FX.sfxOn();
   const hap = document.getElementById("cfgHaptics"); if (hap) hap.checked = !(window.FX && FX.hapticsOn) || FX.hapticsOn();
   const cs = document.getElementById("cfgCallsign"); if (cs) cs.value = settings.callsign || "";
@@ -2496,6 +2497,7 @@ function bindEvents() {
       const sf = document.getElementById("cfgStreakFreeze"); if (sf) settings.streakFreeze = Math.min(3, Math.max(0, Number(sf.value) || 0));
       const bd = document.getElementById("cfgBossDifficulty"); if (bd && BOSS_DIFFICULTY[bd.value]) settings.bossDifficulty = bd.value;
       const nf = document.getElementById("cfgNemesisFreq"); if (nf && NEMESIS_SCHEDULES[nf.value]) settings.nemesisFreq = nf.value;
+      const dm2 = document.getElementById("cfgMissions"); if (dm2) settings.missionsOff = !dm2.checked;
       const snd = document.getElementById("cfgSound"); if (snd && window.FX && FX.setSfx) FX.setSfx(snd.checked);
       const hap = document.getElementById("cfgHaptics"); if (hap && window.FX && FX.setHaptics) FX.setHaptics(hap.checked);
       const cs = document.getElementById("cfgCallsign"); if (cs && cs.value.trim()) settings.callsign = cs.value.trim();
