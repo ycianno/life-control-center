@@ -1246,6 +1246,19 @@ function renderDays() {
   const wk = getWeekData();
   wrap.innerHTML = "";
 
+  // Empty state — a blank slate ("Start blank") shouldn't look broken. Point the
+  // user at where to add their first quests instead of showing seven empty days.
+  const totalTasks = Object.values(blueprint).reduce((n, t) => n + (t ? t.length : 0), 0);
+  if (totalTasks === 0) {
+    wrap.insertAdjacentHTML("beforeend",
+      `<div class="empty-state">
+        <div class="empty-state-title">No daily quests yet</div>
+        <p>Add your first habits in <strong>Settings → Pursuits</strong> — or load a ready-made path there to get a starter set.</p>
+        <button type="button" class="primary" onclick="(document.getElementById('openSettingsBtn')||document.getElementById('moreSettingsBtn')||{click(){}}).click()">Open Settings</button>
+      </div>`);
+    return;
+  }
+
   // Attribute legend — teaches what the colored dots on each habit mean.
   const attrs = (window.Forge && Forge.ATTR_LIST) ? Forge.ATTR_LIST : [];
   if (attrs.length) {

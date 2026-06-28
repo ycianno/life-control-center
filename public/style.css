@@ -2899,6 +2899,7 @@ html { scroll-padding-top: 84px; }
 .onboard-mark svg { width: 52px; height: 52px; fill: var(--accent-primary); filter: drop-shadow(0 0 14px var(--score-glow)); }
 .onboard-hero h2 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px; }
 .onboard-sub { color: var(--muted); font-size: 14px; line-height: 1.55; max-width: 46ch; margin: 0 auto; }
+.onboard-loop { margin: 12px auto 0; max-width: 46ch; font-size: 12.5px; font-weight: 600; line-height: 1.5; color: var(--text); background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 12px; padding: 9px 14px; }
 .onboard-field { margin-bottom: 18px; }
 .onboard-field > label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
 #onboardCallsign { width: 100%; padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: var(--text); font-size: 15px; font-family: inherit; }
@@ -2917,3 +2918,8 @@ html { scroll-padding-top: 84px; }
 .onboard-skip { background: transparent; border: 1px solid var(--line); }
 .onboard-hint { font-size: 12px; color: var(--muted-2); }
 @media (max-width: 560px) { .onboard-paths { grid-template-columns: 1fr; } .onboard-hero h2 { font-size: 22px; } }
+
+/* Empty state — shown when a section has no items yet (e.g. after "Start blank"). */
+.empty-state { text-align: center; padding: 28px 20px; border: 1px dashed var(--line); border-radius: 16px; background: rgba(255,255,255,0.02); }
+.empty-state-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; line-height: 1.55; color: var(--muted); max-width: 42ch; margin: 0 auto 16px; }
