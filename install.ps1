@@ -73,6 +73,56 @@ function Refresh-Path {
 }
 
 function Have($name) { [bool](Get-Command $name -ErrorAction SilentlyContinue) }
+function Add-ToPath($dir) {
+  if (-not $dir) { return }
+  $parts = @($env:Path -split ';' | Where-Object { $_ })
+  if ($parts -notcontains $dir) { $env:Path = "$dir;$env:Path" }
+}
+function Find-NodeExe {
+  $pf86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+  $candidates = @(
+    (Join-Path $env:ProgramFiles 'nodejs\node.exe'),
+    $(if ($pf86) { Join-Path $pf86 'nodejs\node.exe' }),
+    (Join-Path $env:LOCALAPPDATA 'Programs\nodejs\node.exe')
+  )
+  foreach ($p in $candidates) {
+    if ($p -and (Test-Path $p)) {
+      Add-ToPath (Split-Path $p -Parent)
+      return $p
+    }
+  }
+  $cmd = Get-Command node -ErrorAction SilentlyContinue
+  if ($cmd -and $cmd.Source) { return $cmd.Source }
+  return $null
+}
+function Find-NpmCmd {
+  $nodeExe = Find-NodeExe
+  if ($nodeExe) {
+    $npm = Join-Path (Split-Path $nodeExe -Parent) 'npm.cmd'
+    if (Test-Path $npm) {
+      Add-ToPath (Split-Path $npm -Parent)
+      return $npm
+    }
+  }
+  $cmd = Get-Command npm.cmd -ErrorAction SilentlyContinue
+  if ($cmd -and $cmd.Source) { return $cmd.Source }
+  $cmd = Get-Command npm -ErrorAction SilentlyContinue
+  if ($cmd -and $cmd.Source) { return $cmd.Source }
+  return $null
+}
+function Run-WingetInstall([string]$id, [string]$label, [string[]]$extraArgs = @()) {
+  Step "$label - installing via winget..."
+  $args = @(
+    'install',
+    '--exact',
+    '--id', $id,
+    '--source', 'winget',
+    '--accept-source-agreements',
+    '--accept-package-agreements'
+  ) + $extraArgs
+  winget @args
+  return $LASTEXITCODE
+}
 
 try {
   Write-Host ''
@@ -90,8 +140,9 @@ try {
 
   # ---- 1. Node.js 20+ (install LTS via winget if needed) ----
   function Get-NodeMajor {
-    if (Have node) {
-      try { return [int](node -p "process.versions.node.split('.')[0]" 2>$null) } catch { return 0 }
+    $nodeExe = Find-NodeExe
+    if ($nodeExe) {
+      try { return [int](& $nodeExe -p "process.versions.node.split('.')[0]" 2>$null) } catch { return 0 }
     }
     return 0
   }
@@ -99,8 +150,14 @@ try {
   $nodeMajor = Get-NodeMajor
   if ($nodeMajor -lt 20) {
     if (Have winget) {
-      Step 'Node.js 20+ not found - installing the LTS via winget...'
-      winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+      $wingetCode = Run-WingetInstall 'OpenJS.NodeJS.LTS' 'Node.js 20+ not found'
+      if ($wingetCode -ne 0) {
+        Die 'Node.js could not be installed automatically with winget.' @(
+          'Install Node.js LTS manually from https://nodejs.org (pick the "LTS" button), then re-run this installer.',
+          'If winget complained about package sources, run: winget source reset --force',
+          'Then re-run the installer in a NEW PowerShell window.'
+        )
+      }
       Refresh-Path
       $nodeMajor = Get-NodeMajor
     } else {
@@ -112,19 +169,22 @@ try {
   }
   if ($nodeMajor -lt 20) {
     Die 'Node.js was installed but is not visible yet (PATH not refreshed).' @(
-      'Close this window, open a NEW PowerShell window, and run the installer again.'
+      'Close this window, open a NEW PowerShell window, and run the installer again.',
+      'If it still fails, install Node.js LTS manually from https://nodejs.org and re-run.'
     )
   }
+  $nodeExe = Find-NodeExe
 
   # Non-LTS Node (odd major: 21, 23, 25, ...) often has no prebuilt database binary.
   # We do not block on it - we verify the module actually loads after install (step 3b).
   if (($nodeMajor % 2) -ne 0) {
-    Warn ("Node $(node -v) is a non-LTS version - prebuilt database binaries may be missing.")
+    Warn ("Node $(& $nodeExe -v) is a non-LTS version - prebuilt database binaries may be missing.")
     Warn 'If the database step fails, install Node LTS (even-numbered) from https://nodejs.org and re-run.'
   }
-  Ok "Node $(node -v) detected"
+  Ok "Node $(& $nodeExe -v) detected"
 
-  if (-not (Have npm)) {
+  $npmCmd = Find-NpmCmd
+  if (-not $npmCmd) {
     Die 'Node is installed but "npm" was not found.' @(
       'Close this window, open a NEW PowerShell window, and re-run the installer (PATH may need a refresh).',
       'Reinstall Node.js LTS from https://nodejs.org, which includes npm.'
@@ -139,8 +199,10 @@ try {
   } else {
     if (-not (Have git)) {
       if (Have winget) {
-        Step 'git not found - installing via winget...'
-        winget install -e --id Git.Git --accept-source-agreements --accept-package-agreements
+        $wingetCode = Run-WingetInstall 'Git.Git' 'git not found'
+        if ($wingetCode -ne 0) {
+          Warn 'winget could not install Git automatically.'
+        }
         Refresh-Path
       }
       if (-not (Have git)) {
@@ -174,7 +236,7 @@ try {
 
   # ---- 3. dependencies (prebuilt native module; no compiler needed on x64) ----
   Step 'Installing dependencies (~1 min)...'
-  npm install --omit=dev --no-audit --no-fund --loglevel=error
+  & $npmCmd install --omit=dev --no-audit --no-fund --loglevel=error
   if ($LASTEXITCODE -ne 0) {
     Die 'Installing dependencies (npm install) failed.' @(
       'Scroll up in this window (or open the log file) to see the exact npm error.',
@@ -187,7 +249,7 @@ try {
 
   # ---- 3b. verify the native database module actually loads ----
   Step 'Verifying the database engine...'
-  node -e "require('better-sqlite3'); process.exit(0)" 2>$null
+  & $nodeExe -e "require('better-sqlite3'); process.exit(0)" 2>$null
   if ($LASTEXITCODE -ne 0) {
     Warn 'The database engine (better-sqlite3) installed but will not load on this Node version / CPU.'
     Write-Host ''
@@ -199,14 +261,20 @@ try {
     $tryBuild = Read-Host 'Or try to build it now (needs a large download of build tools)? [y/N]'
     if ($tryBuild -match '^[Yy]') {
       if (Have winget) {
-        Step 'Installing Visual Studio C++ Build Tools (this is large and slow)...'
-        winget install -e --id Microsoft.VisualStudio.2022.BuildTools `
-          --override '--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended' `
-          --accept-source-agreements --accept-package-agreements
+        $wingetCode = Run-WingetInstall 'Microsoft.VisualStudio.2022.BuildTools' 'Installing Visual Studio C++ Build Tools (this is large and slow)' @(
+          '--override', '--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended'
+        )
+        if ($wingetCode -ne 0) {
+          Die 'Visual Studio C++ Build Tools could not be installed automatically.' @(
+            'Install Node LTS (even-numbered) from https://nodejs.org and re-run - this is usually enough.',
+            'Or install Visual Studio 2022 Build Tools manually with the C++ workload, then re-run.'
+          )
+        }
         Refresh-Path
         Step 'Rebuilding the database engine from source...'
-        npm rebuild better-sqlite3 --build-from-source
-        node -e "require('better-sqlite3'); process.exit(0)" 2>$null
+        $npmCmd = Find-NpmCmd
+        & $npmCmd rebuild better-sqlite3 --build-from-source
+        & $nodeExe -e "require('better-sqlite3'); process.exit(0)" 2>$null
         if ($LASTEXITCODE -ne 0) {
           Die 'The database engine still will not load after building.' @(
             'Switch to Node LTS (even-numbered) from https://nodejs.org and re-run - this is the most reliable path.',
@@ -247,7 +315,7 @@ try {
 
   # ---- 5. Start Menu shortcut ----
   try {
-    $nodeExe  = (Get-Command node).Source
+    $nodeExe  = Find-NodeExe
     $programs = [Environment]::GetFolderPath('Programs')
     $lnk      = Join-Path $programs 'The Forge.lnk'
     $ws       = New-Object -ComObject WScript.Shell
@@ -267,7 +335,7 @@ try {
   # ---- 6. optional: run at logon via Scheduled Task ----
   if ($Service) {
     try {
-      $nodeExe = (Get-Command node).Source
+      $nodeExe = Find-NodeExe
       $action  = New-ScheduledTaskAction -Execute $nodeExe -Argument 'server.js' -WorkingDirectory $Dir
       $trigger = New-ScheduledTaskTrigger -AtLogOn
       $set     = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
@@ -306,7 +374,7 @@ try {
     # Server runs in the foreground; no keypress pause needed after it.
     $NoPause = $true
     if ($script:Transcribing) { try { Stop-Transcript | Out-Null } catch {} ; $script:Transcribing = $false }
-    npm start
+    & $npmCmd start
     exit 0
   }
 }
