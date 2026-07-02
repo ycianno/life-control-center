@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set up · The Forge</title>
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+  <link rel="stylesheet" href="style.css?v=53" />
+  <style>
+    body { display: grid; place-items: center; }
+    .setup-box { width: 100%; max-width: 440px; padding: 40px; text-align: center; }
+    .setup-box h1 { font-size: 32px; margin-bottom: 12px; background: none; -webkit-text-fill-color: var(--text); }
+    .setup-box p { color: var(--text-dim); margin: 0 0 24px; line-height: 1.5; }
+    .setup-box input { margin-bottom: 12px; text-align: center; font-size: 18px; }
+    .setup-box button { width: 100%; padding: 14px; font-size: 16px; }
+    .error { color: var(--red); font-size: 14px; margin-top: 16px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="setup-box glass">
+    <div class="brand" style="justify-content: center; margin-bottom: 16px;"><span class="orb"></span><span>The Forge</span></div>
+    <h1>Create Password</h1>
+    <p>This protects your local dashboard. The password is stored as a one-way hash in your SQLite database.</p>
+    <form id="setupForm">
+      <input type="password" id="password" placeholder="Create password" required autofocus autocomplete="new-password">
+      <input type="password" id="confirmPassword" placeholder="Confirm password" required autocomplete="new-password">
+      <button type="submit" class="primary">Finish Setup</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
+
+  <script src="setup.js"></script>
+</body>
+</html>

@@ -10,7 +10,7 @@ services:
         protocol: tcp
     environment:
       - PORT=3007
-      - APP_PASSWORD=changeme
+      - APP_PASSWORD=replace-me-with-a-long-password
       - DB_PATH=/app/data/database.sqlite
     volumes:
       - type: bind
@@ -43,8 +43,8 @@ x-casaos:
       Discord companion.
   tips:
     custom: >-
-      Set APP_PASSWORD before exposing this outside your network. The dashboard
-      is served on port 3007.
+      Replace APP_PASSWORD with a unique password before exposing this outside
+      your network. The dashboard is served on port 3007.
   screenshot_link:
     - https://raw.githubusercontent.com/ycianno/the-forge/main/docs/screenshots/character.png
     - https://raw.githubusercontent.com/ycianno/the-forge/main/docs/screenshots/cabinet.png

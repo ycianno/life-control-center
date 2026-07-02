@@ -1,0 +1,14 @@
+.git
+.github
+.claude
+node_modules
+data
+backups
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+docs
+test
+icon-master*.png

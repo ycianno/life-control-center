@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "DB_PATH=/tmp/forge-dev.sqlite PORT=3099 node server.js"
+    "dev": "DB_PATH=/tmp/forge-dev.sqlite PORT=3099 node server.js",
+    "test": "node test/engine-regression.js && node test/auth-setup.js && node test/api-validation.js && node test/backup-restore.js",
+    "check:syntax": "node --check server.js && node --check send-reminders.js && node --check public/app.js && node --check public/extras.js && node --check public/fx.js && node --check public/game.js && node --check public/login.js && node --check public/modules.js && node --check public/setup.js && node --check public/sw.js && node --check test/engine-regression.js && node --check test/auth-setup.js && node --check test/api-validation.js && node --check test/backup-restore.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.9.0",

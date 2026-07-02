@@ -2792,11 +2792,19 @@ function copySummary() {
 async function exportBackup() {
   await persistDatabase();
   await persistSettings();
-  const payload = { exportedAt: new Date().toISOString(), app: "Life Control Center", version: 3, database, settings, achievements };
+  let payload;
+  try {
+    const res = await fetch("/api/backup");
+    if (!res.ok) throw new Error("Server backup export failed");
+    payload = await res.json();
+  } catch (err) {
+    console.warn("Falling back to client-side backup export", err);
+    payload = { exportedAt: new Date().toISOString(), app: "The Forge", version: 3, backupVersion: 1, database, settings, achievements };
+  }
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `life-control-center-backup-${iso(new Date())}.json`;
+  a.download = `the-forge-backup-${iso(new Date())}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -2808,36 +2816,25 @@ async function importBackup(e) {
   reader.onload = async () => {
     try {
       const payload = JSON.parse(reader.result);
-      const incomingDb = payload.database || payload;
-      if (!incomingDb.weeks) throw new Error("Invalid backup file");
-      database = incomingDb;
-      database.version = database.version || 2;
-      if (payload.settings) settings = { version: 3, dayTemplates: payload.settings.dayTemplates || null, ...payload.settings };
-
-      // Upload all weeks to server
-      for (const [key, data] of Object.entries(database.weeks)) {
-        await fetch(`/api/week/${key}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+      if (!confirm("Import this backup? Included weeks replace current week data; included records replace current records.")) {
+        e.target.value = "";
+        return;
       }
-      await persistSettings();
-      
-      // Import achievements if present
-      if (payload.achievements && Array.isArray(payload.achievements)) {
-        for (const a of payload.achievements) {
-          await fetch('/api/achievements', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(a)
-          });
-        }
-        await loadAchievements();
-      }
-      
+      const res = await fetch("/api/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const imported = await res.json().catch(() => ({}));
+      if (!res.ok || !imported.success) throw new Error(imported.error || imported.message || "Server rejected the backup");
+      database = imported.database || { version: 2, weeks: {} };
+      settings = imported.settings || { version: 3, dayTemplates: null };
+      achievements = Array.isArray(imported.achievements) ? imported.achievements : [];
+      localStorage.setItem(APP_DB_KEY, JSON.stringify(database));
+      localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings));
+      if (settings.theme) applyTheme(settings.theme);
       applyWeekToUI();
-      alert("Backup imported and synced to server successfully.");
+      alert("Backup imported successfully.");
     } catch (err) { alert("Could not import backup: " + err.message); }
     e.target.value = "";
   };

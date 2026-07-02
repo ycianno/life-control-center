@@ -99,12 +99,12 @@
   async function showDefaultPasswordBanner() {
     try {
       var cfg = await (await fetch("/api/config")).json();
-      if (!cfg || !cfg.defaultPassword) return;
+      if (!cfg || !(cfg.defaultPassword || cfg.insecurePassword)) return;
       if (document.getElementById("forgePwBanner")) return;
       injectStyles();
       var bar = document.createElement("div");
       bar.id = "forgePwBanner";
-      bar.innerHTML = "⚠️ You're using the default password. Set <code>APP_PASSWORD</code> before exposing this anywhere." +
+      bar.innerHTML = "⚠️ You're using an unsafe setup password. Set a unique <code>APP_PASSWORD</code> before exposing this anywhere." +
         "<button type='button'>Dismiss</button>";
       bar.querySelector("button").onclick = function () { bar.remove(); };
       document.body.insertBefore(bar, document.body.firstChild);

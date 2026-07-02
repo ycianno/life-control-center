@@ -35,4 +35,5 @@ image `ghcr.io/ycianno/the-forge:latest` work directly with **Portainer**,
 `ghcr.io/ycianno/the-forge:latest`, port `3007`, volume `/app/data`).
 
 > All of these use the public multi-arch image (amd64 + arm64), so they run on
-> a Raspberry Pi as well as an x86 box. Remember to set `APP_PASSWORD`.
+> a Raspberry Pi as well as an x86 box. Create a password on first launch, or
+> set `APP_PASSWORD` if you prefer an environment-variable override.

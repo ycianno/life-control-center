@@ -80,11 +80,11 @@ All three run the **exact same app** on the same port. You can change your mind 
 If you already run a self-hosted dashboard, this is the easiest path — install from the UI in one click. Ready-made manifests live in [`deploy/`](deploy/).
 
 - **CasaOS** — App Store → *Custom Install* (the `+`) → paste the contents of [`deploy/casaos/the-forge.yml`](deploy/casaos/the-forge.yml).
-- **Portainer** — *Stacks → Add stack*, name it `forge`, paste the project's [`docker-compose.yml`](docker-compose.yml) (or point it at this repo), set `APP_PASSWORD`, then *Deploy*.
+- **Portainer** — *Stacks → Add stack*, name it `forge`, paste the project's [`docker-compose.yml`](docker-compose.yml) (or point it at this repo), then *Deploy*. On first launch, create your password in the browser.
 - **Umbrel** — add as a Community App Store app; see [`deploy/umbrel/`](deploy/umbrel/).
-- **Unraid / Dockge / Coolify / Yacht** — *Add Container* with image `ghcr.io/ycianno/the-forge:latest`, port `3007`, volume `/app/data`, env `APP_PASSWORD`.
+- **Unraid / Dockge / Coolify / Yacht** — *Add Container* with image `ghcr.io/ycianno/the-forge:latest`, port `3007`, volume `/app/data`. Set `APP_PASSWORD` if you want an environment password override; otherwise create one on first launch.
 
-See [`deploy/README.md`](deploy/README.md) for full details. Remember to set `APP_PASSWORD` in each.
+See [`deploy/README.md`](deploy/README.md) for full details.
 
 ### Option A — Docker (recommended)
 
@@ -93,19 +93,20 @@ See [`deploy/README.md`](deploy/README.md) for full details. Remember to set `AP
 ```bash
 docker run -d --name forge \
   -p 3007:3007 \
-  -e APP_PASSWORD=your-password \
   -v "$PWD/data:/app/data" \
   ghcr.io/ycianno/the-forge:latest
 ```
 
-Then open **http://localhost:3007**. That's it — to update later: `docker pull ghcr.io/ycianno/the-forge:latest && docker rm -f forge` and re-run the command.
+Then open **http://localhost:3007** and create your password. That's it — to update later: `docker pull ghcr.io/ycianno/the-forge:latest && docker rm -f forge` and re-run the command.
+
+Prefer an environment-variable password instead of browser setup? Add `-e APP_PASSWORD=your-password` to the command.
 
 **Or from source, with Compose:**
 
 ```bash
 git clone https://github.com/ycianno/the-forge.git
 cd the-forge
-cp .env.example .env          # then edit .env and set APP_PASSWORD
+cp .env.example .env          # optional: edit .env for PORT / APP_PASSWORD overrides
 docker compose up -d
 ```
 
@@ -143,9 +144,10 @@ curl -fsSL https://raw.githubusercontent.com/ycianno/the-forge/main/install.sh |
 git clone https://github.com/ycianno/the-forge.git
 cd the-forge
 npm install
-echo "APP_PASSWORD=your-password" > .env    # or: export APP_PASSWORD=your-password
 npm start
 ```
+
+Then open **http://localhost:3007** and create your password. To use an environment-variable password instead, set `APP_PASSWORD` in `.env` or export it before `npm start`.
 
 **Keep it running on boot (Linux / systemd).** Docker restarts the app for you; on bare metal a small service unit does the same. The easiest way is to let the installer do it — re-run with `--service`:
 
@@ -219,23 +221,25 @@ Then open **http://localhost:3007**.
 | **Port 3007 already in use** | Something else is on that port. Pick another: set `PORT=8080` (in `.env`, or `-e PORT=8080 -p 8080:8080` for Docker) and open that port instead. |
 | **Page won't load at localhost** | Give it a few seconds on first start (it creates the database). Check it's running: `docker logs forge` (Docker) or look at the terminal output (bare metal). `/healthz` should return `{"status":"ok"}`. |
 | **Can't reach it from my phone** | Use your machine's LAN IP, not `localhost`: `http://<server-ip>:3007`. Both devices must be on the same Wi-Fi, and the host firewall must allow port 3007. For outside-home access, see [Accessing it](#accessing-it-from-your-phone--outside-home). |
-| **I forgot my password / want to change it** | Edit `APP_PASSWORD` in `.env` (bare metal / Compose) or the `-e APP_PASSWORD=` flag (plain `docker run`), then restart. |
+| **I forgot my password / want to change it** | Set a temporary `APP_PASSWORD` environment override and restart, log in, export a backup if needed, then remove the override when you're ready to use the stored setup password again. |
 | **How do I update?** | **Docker:** `docker pull …:latest` then recreate the container (your `data/` volume is kept). **Bare metal:** `git pull && npm install &&` restart. Your database is never touched by updates. |
 
 ## Configuration
 
 | Variable | Default | Description |
 |---|---|---|
-| `APP_PASSWORD` | `changeme` | **Change this.** The password for the single user. |
+| `APP_PASSWORD` | *(unset)* | Optional password override. If unset or left as a known placeholder, The Forge asks you to create a password on first launch and stores a one-way hash in SQLite. |
 | `PORT` | `3007` | Port the server listens on. |
 | `DB_PATH` | `/app/data/database.sqlite` | Where the SQLite database lives. |
 | `SESSION_SECRET` | *(auto-generated)* | Secret used to sign the session cookie. A random one is generated and persisted on first run; set this only if you want to control it explicitly. |
+| `PUBLIC_ORIGIN` | *(unset)* | Optional canonical origin, such as `https://forge.example.com`, for reverse proxies that rewrite the `Host` header. Leave unset for normal Docker/local/LAN use. |
+| `TRUST_PROXY` | *(unset)* | Set to `1` only when The Forge is behind a reverse proxy you control. This lets Express honor `X-Forwarded-Proto` and mark auth cookies `Secure` on HTTPS. |
 
 Web-push **VAPID keys are generated automatically** on first run and stored in the database — you don't need to configure them.
 
 ## Backups
 
-- **From the UI:** Settings → Data → *Export Full Backup* writes a JSON snapshot you can re-import later.
+- **From the UI:** Settings → Data → *Export Full Backup* writes a JSON snapshot you can re-import later. Imports are validated server-side and applied atomically, so a bad backup is rejected before it can partially overwrite your data.
 - **Raw database:** copy `data/database.sqlite` out of the mounted volume. The included [`backup.sh`](backup.sh) shows a simple scheduled-snapshot approach.
 
 ## Accessing it from your phone / outside home
@@ -255,14 +259,16 @@ By default The Forge is reachable on your home network at `http://<server-ip>:30
 
 The Forge is a **single-user app with a single shared password** — intentionally simple, not a multi-tenant platform. It ships with sensible defaults:
 
+- A first-run setup screen that stores a one-way `scrypt` password hash in SQLite.
 - A signed, `httpOnly` session cookie (secret auto-generated and persisted).
 - **Brute-force protection:** the login endpoint is rate-limited (lockout after repeated failures).
+- **Same-origin write protection:** browser write requests must come from the app's own origin, with `PUBLIC_ORIGIN` available for unusual reverse-proxy setups.
 - **Security headers** including a strict Content-Security-Policy (all assets, fonts included, are served locally — no external calls).
-- An in-app warning if you're still running the default password.
+- An in-app warning if you're still running an unsafe setup password.
 
 Still, treat it like what it is:
 
-- **Always change `APP_PASSWORD`** before exposing it anywhere.
+- **Always create a unique password** before exposing it anywhere. If you use `APP_PASSWORD`, do not leave it as a placeholder.
 - **Don't put it directly on the public internet without protection.** Use HTTPS via a reverse proxy, or — recommended — a zero-trust tunnel / VPN (Cloudflare Tunnel, Tailscale) so only you can reach it. See [Accessing it](#accessing-it-from-your-phone--outside-home) above and [SECURITY.md](SECURITY.md).
 
 ## Tech stack

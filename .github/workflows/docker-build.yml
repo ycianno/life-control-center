@@ -8,10 +8,20 @@ on:
 
 jobs:
   docker:
-    name: Docker image builds
+    name: Test and Docker image build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Syntax check
+        run: npm run check:syntax
+      - name: Regression test
+        run: npm test
       - name: Build image
         run: docker build -t the-forge:ci .
       - name: Smoke test (boots and serves login)
@@ -22,3 +32,5 @@ jobs:
             sleep 1
           done
           echo "server did not come up"; docker logs forge-ci; exit 1
+      - name: Runtime user is non-root
+        run: docker exec forge-ci sh -c "test \"$(awk '/^Uid:/ {print $2}' /proc/1/status)\" != 0"

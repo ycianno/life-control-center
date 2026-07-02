@@ -14,7 +14,7 @@ services:
       - PORT=3007
       # Behind Umbrel's app_proxy the dashboard is already gated by your Umbrel
       # login. Change this if you also expose the app directly.
-      - APP_PASSWORD=changeme
+      - APP_PASSWORD=replace-me-with-a-long-password
       - DB_PATH=/app/data/database.sqlite
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
